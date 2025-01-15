@@ -37,6 +37,10 @@ class UserInDB(UserBase):
     id: str
     created_at: datetime
 
+    @property
+    def is_admin(self) -> bool:
+        return self.role == UserRole.ADMIN
+
 
 class UserResponse(UserInDB):
     pass

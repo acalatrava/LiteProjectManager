@@ -29,7 +29,9 @@ def test_db(test_db_path):
     DB.connect()
 
     # Create tables
-    DB.create_tables([User, Sample, AuthToken])
+    from app.models.project import Project, ProjectMember
+    from app.models.task import Task
+    DB.create_tables([User, Sample, AuthToken, Project, ProjectMember, Task])
 
     yield DB
 

@@ -16,6 +16,9 @@ import os
 from app.db.database import get_db
 from peewee import Database
 from app.api.v1.endpoints.users import UsersEndpoint
+from app.api.v1.endpoints.projects import ProjectsEndpoint
+from app.api.v1.endpoints.tasks import TasksEndpoint
+from app.api.v1.endpoints.gantt import GanttEndpoint
 
 
 class SPAStaticFiles(StaticFiles):
@@ -178,6 +181,24 @@ api_app.include_router(
             }
         }
     }
+)
+
+api_app.include_router(
+    ProjectsEndpoint().get_router(),
+    prefix="/projects",
+    tags=["projects"]
+)
+
+api_app.include_router(
+    TasksEndpoint().get_router(),
+    prefix="/tasks",
+    tags=["tasks"]
+)
+
+api_app.include_router(
+    GanttEndpoint().get_router(),
+    prefix="/gantt",
+    tags=["gantt"]
 )
 
 app.include_router(api_app)

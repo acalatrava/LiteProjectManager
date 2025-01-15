@@ -12,6 +12,16 @@ from app.schemas.sample import SampleModel
 from .database import DB, get_db
 from app.models.auth_token import AuthToken
 from app.core.config import AUTH_TOKEN_LIFETIME
+from app.models.project import Project as ProjectModel, ProjectMember as ProjectMemberModel
+from app.models.task import Task as TaskModel
+from app.schemas.project import (
+    ProjectCreate,
+    ProjectUpdate,
+    Project as ProjectSchema,
+    ProjectMember as ProjectMemberSchema,
+    ProjectMemberBase
+)
+from app.schemas.task import TaskCreate, TaskUpdate, Task as TaskSchema
 
 
 class SampleTable:
@@ -307,5 +317,312 @@ class UsersTable:
             return None
 
 
+class ProjectsTable:
+    def __init__(self):
+        with get_db():
+            DB.create_tables([ProjectModel, ProjectMemberModel])
+
+    def create_project(self, project: ProjectCreate, creator_id: str) -> ProjectSchema:
+        project_id = str(uuid.uuid4())
+        project_db = ProjectModel.create(
+            id=project_id,
+            name=project.name,
+            description=project.description,
+            start_date=project.start_date,
+            deadline=project.deadline,
+            status='pending',
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+
+        # Add creator as project manager
+        ProjectMemberModel.create(
+            id=str(uuid.uuid4()),
+            project_id=project_id,
+            user_id=creator_id,
+            role='project_manager',
+            created_at=datetime.now()
+        )
+
+        return ProjectSchema.model_validate({
+            "id": project_db.id,
+            "name": project_db.name,
+            "description": project_db.description,
+            "start_date": project_db.start_date,
+            "deadline": project_db.deadline,
+            "status": project_db.status,
+            "created_at": project_db.created_at,
+            "updated_at": project_db.updated_at,
+            "is_active": project_db.is_active
+        })
+
+    def update_project(self, project_id: str, project_update: ProjectUpdate) -> Optional[ProjectSchema]:
+        try:
+            project = ProjectModel.get(ProjectModel.id == project_id)
+            project.name = project_update.name
+            project.description = project_update.description
+            project.start_date = project_update.start_date
+            project.deadline = project_update.deadline
+            if project_update.status:
+                project.status = project_update.status
+            project.updated_at = datetime.now()
+            project.save()
+            return ProjectSchema.model_validate({
+                "id": project.id,
+                "name": project.name,
+                "description": project.description,
+                "start_date": project.start_date,
+                "deadline": project.deadline,
+                "status": project.status,
+                "created_at": project.created_at,
+                "updated_at": project.updated_at,
+                "is_active": project.is_active
+            })
+        except ProjectModel.DoesNotExist:
+            return None
+
+    def delete_project(self, project_id: str) -> bool:
+        try:
+            # Delete associated tasks first
+            TaskModel.delete().where(TaskModel.project_id == project_id).execute()
+            # Delete project members
+            ProjectMemberModel.delete().where(ProjectMemberModel.project_id == project_id).execute()
+            # Delete project
+            ProjectModel.delete().where(ProjectModel.id == project_id).execute()
+            return True
+        except:
+            return False
+
+    def get_all_projects(self) -> List[ProjectSchema]:
+        return [
+            ProjectSchema.model_validate({
+                "id": p.id,
+                "name": p.name,
+                "description": p.description,
+                "start_date": p.start_date,
+                "deadline": p.deadline,
+                "status": p.status,
+                "created_at": p.created_at,
+                "updated_at": p.updated_at,
+                "is_active": p.is_active
+            })
+            for p in ProjectModel.select()
+        ]
+
+    def get_user_projects(self, user_id: str) -> List[ProjectSchema]:
+        return [
+            ProjectSchema.model_validate({
+                "id": pm.project.id,
+                "name": pm.project.name,
+                "description": pm.project.description,
+                "start_date": pm.project.start_date,
+                "deadline": pm.project.deadline,
+                "status": pm.project.status,
+                "created_at": pm.project.created_at,
+                "updated_at": pm.project.updated_at,
+                "is_active": pm.project.is_active
+            })
+            for pm in ProjectMemberModel.select().where(ProjectMemberModel.user_id == user_id)
+        ]
+
+    def is_project_manager(self, user_id: str, project_id: str) -> bool:
+        try:
+            member = ProjectMemberModel.get(
+                (ProjectMemberModel.user_id == user_id) &
+                (ProjectMemberModel.project_id == project_id)
+            )
+            return member.role == 'project_manager'
+        except ProjectMemberModel.DoesNotExist:
+            return False
+
+    def user_has_access(self, user_id: str, project_id: str) -> bool:
+        return ProjectMemberModel.select().where(
+            (ProjectMemberModel.user_id == user_id) &
+            (ProjectMemberModel.project_id == project_id)
+        ).exists()
+
+    def get_project_members(self, project_id: str) -> List[ProjectMemberSchema]:
+        return [
+            ProjectMemberSchema.model_validate({
+                "id": pm.id,
+                "project_id": pm.project_id,
+                "user_id": pm.user_id,
+                "role": pm.role,
+                "created_at": pm.created_at
+            })
+            for pm in ProjectMemberModel.select().where(ProjectMemberModel.project_id == project_id)
+        ]
+
+    def add_project_member(self, project_id: str, member: ProjectMemberBase) -> ProjectMemberSchema:
+        member_db = ProjectMemberModel.create(
+            id=str(uuid.uuid4()),
+            project_id=project_id,
+            user_id=member.user_id,
+            role=member.role,
+            created_at=datetime.now()
+        )
+        return ProjectMemberSchema.model_validate({
+            "id": member_db.id,
+            "project_id": member_db.project_id,
+            "user_id": member_db.user_id,
+            "role": member_db.role,
+            "created_at": member_db.created_at
+        })
+
+    def remove_project_member(self, project_id: str, user_id: str) -> bool:
+        try:
+            ProjectMemberModel.delete().where(
+                (ProjectMemberModel.project_id == project_id) &
+                (ProjectMemberModel.user_id == user_id)
+            ).execute()
+            return True
+        except:
+            return False
+
+
+class TasksTable:
+    def __init__(self):
+        with get_db():
+            DB.create_tables([TaskModel])
+
+    def create_task(self, task: TaskCreate, created_by: str) -> TaskSchema:
+        task_id = str(uuid.uuid4())
+        task_db = TaskModel.create(
+            id=task_id,
+            project_id=task.project_id,
+            name=task.name,
+            description=task.description,
+            start_date=task.start_date,
+            deadline=task.deadline,
+            created_by_id=created_by,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        return TaskSchema.model_validate({
+            "id": task_db.id,
+            "name": task_db.name,
+            "description": task_db.description,
+            "project_id": task_db.project_id,
+            "start_date": task_db.start_date,
+            "deadline": task_db.deadline,
+            "assigned_to_id": task_db.assigned_to_id,
+            "created_by_id": task_db.created_by_id,
+            "status": task_db.status,
+            "created_at": task_db.created_at,
+            "updated_at": task_db.updated_at
+        })
+
+    def update_task(self, task_id: str, task_update: TaskUpdate) -> Optional[TaskSchema]:
+        try:
+            task = TaskModel.get(TaskModel.id == task_id)
+            update_data = task_update.model_dump(exclude_unset=True)
+
+            for field, value in update_data.items():
+                setattr(task, field, value)
+
+            task.updated_at = datetime.now()
+            task.save()
+            return TaskSchema.model_validate({
+                "id": task.id,
+                "name": task.name,
+                "description": task.description,
+                "project_id": task.project_id,
+                "start_date": task.start_date,
+                "deadline": task.deadline,
+                "assigned_to_id": task.assigned_to_id,
+                "created_by_id": task.created_by_id,
+                "status": task.status,
+                "created_at": task.created_at,
+                "updated_at": task.updated_at
+            })
+        except TaskModel.DoesNotExist:
+            return None
+
+    def delete_task(self, task_id: str) -> bool:
+        try:
+            TaskModel.delete().where(TaskModel.id == task_id).execute()
+            return True
+        except:
+            return False
+
+    def get_task(self, task_id: str) -> Optional[TaskSchema]:
+        try:
+            task = TaskModel.get(TaskModel.id == task_id)
+            return TaskSchema.model_validate({
+                "id": task.id,
+                "name": task.name,
+                "description": task.description,
+                "project_id": task.project_id,
+                "start_date": task.start_date,
+                "deadline": task.deadline,
+                "assigned_to_id": task.assigned_to_id,
+                "created_by_id": task.created_by_id,
+                "status": task.status,
+                "created_at": task.created_at,
+                "updated_at": task.updated_at
+            })
+        except TaskModel.DoesNotExist:
+            return None
+
+    def get_all_tasks(self) -> List[TaskSchema]:
+        return [
+            TaskSchema.model_validate({
+                "id": t.id,
+                "name": t.name,
+                "description": t.description,
+                "project_id": t.project_id,
+                "start_date": t.start_date,
+                "deadline": t.deadline,
+                "assigned_to_id": t.assigned_to_id,
+                "created_by_id": t.created_by_id,
+                "status": t.status,
+                "created_at": t.created_at,
+                "updated_at": t.updated_at
+            })
+            for t in TaskModel.select()
+        ]
+
+    def get_user_tasks(self, user_id: str) -> List[TaskSchema]:
+        return [
+            TaskSchema.model_validate({
+                "id": t.id,
+                "name": t.name,
+                "description": t.description,
+                "project_id": t.project_id,
+                "start_date": t.start_date,
+                "deadline": t.deadline,
+                "assigned_to_id": t.assigned_to_id,
+                "created_by_id": t.created_by_id,
+                "status": t.status,
+                "created_at": t.created_at,
+                "updated_at": t.updated_at
+            })
+            for t in TaskModel.select().where(
+                (TaskModel.assigned_to_id == user_id) |
+                (TaskModel.created_by_id == user_id)
+            )
+        ]
+
+    def get_project_tasks(self, project_id: str) -> List[TaskSchema]:
+        return [
+            TaskSchema.model_validate({
+                "id": t.id,
+                "name": t.name,
+                "description": t.description,
+                "project_id": t.project_id,
+                "start_date": t.start_date,
+                "deadline": t.deadline,
+                "assigned_to_id": t.assigned_to_id,
+                "created_by_id": t.created_by_id,
+                "status": t.status,
+                "created_at": t.created_at,
+                "updated_at": t.updated_at
+            })
+            for t in TaskModel.select().where(TaskModel.project_id == project_id)
+        ]
+
+
 Users = UsersTable()
 Samples = SampleTable()
+Projects = ProjectsTable()
+Tasks = TasksTable()

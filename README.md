@@ -1,8 +1,11 @@
-# APP Template
+# Lite Project Manager
 
-This is an app template with a FastAPI backend and a Svelte frontend.
-
-The template should support user login and authentication by default. It uses a sqlite database.
+Lite Project Manager is a simple project management tool that allows you to create, manage and track your projects for small teams. It allows you to create projects, add tasks to them, assign them to users, and track their progress. It will also generate a Gantt chart for each project. Users can login and register. They will have different roles and permissions like:
+ - Admin: Can create, edit and delete projects, tasks, users and roles.
+ - User: Can view projects, tasks and their own tasks.
+Also, an user can be assigned to multiple projects and have different roles in each project:
+ - Project Manager: Can create, edit and delete tasks in a project. It can also assign tasks to other users.
+ - Project Member: Can view tasks in a project, and update their own tasks.
 
 ### Prerequisites
 
@@ -39,13 +42,45 @@ Once the app is running you can check the docs via `http://127.0.0.1:8000/docs`
 
 The application provides the following endpoints:
 
+### Authentication
+
 - `POST /signup`: Create a new user. The request body should include `username` and `password`. 
 
 - `POST /token`: Authenticate a user and return an access token. The request body should include `username` and `password`.
 
-- `GET /api/v1/list`: List all the events on each platform.
+### Projects
 
-- `GET /`: A root endpoint that returns a welcome message.
+- `GET /api/v1/projects`: Get all projects.
+
+- `POST /api/v1/projects`: Create a new project. The request body should include `name` and `description`.
+
+- `PUT /api/v1/projects/<project_id>`: Update a project. The request body should include `name` and `description`.
+
+- `DELETE /api/v1/projects/<project_id>`: Delete a project.
+
+### Tasks
+
+- `GET /api/v1/tasks`: Get all tasks.
+
+- `POST /api/v1/tasks`: Create a new task. The request body should include `name` and `description`.
+
+- `PUT /api/v1/tasks/<task_id>`: Update a task. The request body should include `name` and `description`.
+
+- `DELETE /api/v1/tasks/<task_id>`: Delete a task.
+
+### Users
+
+- `GET /api/v1/users`: Get all users.
+
+- `POST /api/v1/users`: Create a new user. The request body should include `username` and `password`.
+
+- `PUT /api/v1/users/<user_id>`: Update a user. The request body should include `username` and `password`.
+
+- `DELETE /api/v1/users/<user_id>`: Delete a user.
+
+### Gantt Chart
+
+- `GET /api/v1/gantt/<project_id>`: Get the Gantt chart for a project.
 
 
 ## Deployment
