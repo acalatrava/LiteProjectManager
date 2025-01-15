@@ -18,7 +18,7 @@
 
             const userData = await api.getCurrentUser();
             user.set(userData);
-            goto("/dashboard");
+            goto("/projects");
         } catch (err) {
             error = "Invalid credentials";
             console.error(err);

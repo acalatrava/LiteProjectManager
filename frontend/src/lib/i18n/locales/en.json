@@ -8,13 +8,13 @@
         "login": "Login",
         "register": "Register",
         "profile": "Profile",
-        "dashboard": "Dashboard",
         "admin": "Admin",
         "cancel": "Cancel",
         "saveChanges": "Save Changes",
         "saving": "Saving...",
-        "appName": "AppName",
-        "allRightsReserved": "All rights reserved."
+        "appName": "Project Manager",
+        "allRightsReserved": "All rights reserved.",
+        "projects": "Projects"
     },
     "auth": {
         "loginTitle": "Login to your account",

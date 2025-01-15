@@ -62,7 +62,7 @@ Directory: /frontend
    - Dynamic language switching
 
 3. Protected Routes:
-   - /dashboard/   # Main user dashboard
+   - /projects/   # projects dashboard
    - /profile/     # User profile
    - /admin/       # Admin panel
 

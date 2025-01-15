@@ -7,7 +7,7 @@ export const load = async () => {
     if (browser) {
         const currentUser = get(user);
         if (currentUser?.role !== 'admin') {
-            goto('/dashboard');
+            goto('/projects');
         }
     }
 }; 

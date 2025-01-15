@@ -23,7 +23,7 @@
 
             const userData = await api.getCurrentUser();
             user.set(userData);
-            goto("/dashboard");
+            goto("/projects");
         } catch (err) {
             error = "Registration failed. Please try again.";
             console.error(err);

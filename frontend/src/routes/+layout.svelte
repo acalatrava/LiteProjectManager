@@ -102,13 +102,13 @@
                                 </a>
                             {/if}
                             <a
-                                href="/dashboard"
+                                href="/projects"
                                 class="px-3 py-2 rounded-md text-sm font-medium {$page
-                                    .url.pathname === '/dashboard'
+                                    .url.pathname === '/projects'
                                     ? 'bg-primary-100 text-primary-700'
                                     : 'text-gray-700 hover:bg-gray-100'}"
                             >
-                                {$_("common.dashboard")}
+                                {$_("common.projects")}
                             </a>
                             <div class="relative ml-3">
                                 <button
@@ -211,9 +211,9 @@
                                 </a>
                             {/if}
                             <a
-                                href="/dashboard"
+                                href="/projects"
                                 class="block px-3 py-2 rounded-md text-base font-medium {$page
-                                    .url.pathname === '/dashboard'
+                                    .url.pathname === '/projects'
                                     ? 'bg-primary-100 text-primary-700'
                                     : 'text-gray-700 hover:bg-gray-100'}"
                             >

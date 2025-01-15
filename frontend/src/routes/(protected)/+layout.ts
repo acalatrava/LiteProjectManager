@@ -7,6 +7,8 @@ export const load = async () => {
     if (browser) {
         if (!isAuthenticated()) {
             goto('/login');
+        } else if (window.location.pathname === '/') {
+            goto('/projects');
         }
     }
 }; 

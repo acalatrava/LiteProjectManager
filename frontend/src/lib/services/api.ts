@@ -1,6 +1,7 @@
 import type { AuthResponse, RegisterData, User } from '$lib/types/user';
 import type { Sample, SearchResult } from '$lib/types/sample';
 import { env } from '$env/dynamic/public';
+import type { Project, ProjectCreate, ProjectMember, Task, TaskCreate, GanttTask } from '$lib/types/project';
 
 const API_URL = import.meta.env.VITE_API_URL || env.PUBLIC_API_URL;
 
@@ -164,6 +165,161 @@ class ApiService {
 
         if (!response.ok) {
             throw new Error('Failed to update profile');
+        }
+
+        return response.json();
+    }
+
+    async getProjects(): Promise<Project[]> {
+        const response = await fetch(`${API_URL}/api/v1/projects/`, {
+            headers: this.getHeaders(),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to get projects');
+        }
+
+        return response.json();
+    }
+
+    async createProject(project: ProjectCreate): Promise<Project> {
+        const response = await fetch(`${API_URL}/api/v1/projects/`, {
+            method: 'POST',
+            headers: this.getHeaders(),
+            body: JSON.stringify(project),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to create project');
+        }
+
+        return response.json();
+    }
+
+    async updateProject(projectId: string, project: Partial<Project>): Promise<Project> {
+        const response = await fetch(`${API_URL}/api/v1/projects/${projectId}`, {
+            method: 'PUT',
+            headers: this.getHeaders(),
+            body: JSON.stringify(project),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to update project');
+        }
+
+        return response.json();
+    }
+
+    async deleteProject(projectId: string): Promise<void> {
+        const response = await fetch(`${API_URL}/api/v1/projects/${projectId}`, {
+            method: 'DELETE',
+            headers: this.getHeaders(),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to delete project');
+        }
+    }
+
+    async getProjectMembers(projectId: string): Promise<ProjectMember[]> {
+        const response = await fetch(`${API_URL}/api/v1/projects/${projectId}/members`, {
+            headers: this.getHeaders(),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to get project members');
+        }
+
+        return response.json();
+    }
+
+    async addProjectMember(projectId: string, userId: string, role: string): Promise<ProjectMember> {
+        const response = await fetch(`${API_URL}/api/v1/projects/${projectId}/members`, {
+            method: 'POST',
+            headers: this.getHeaders(),
+            body: JSON.stringify({ user_id: userId, role }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to add project member');
+        }
+
+        return response.json();
+    }
+
+    async removeProjectMember(projectId: string, userId: string): Promise<void> {
+        const response = await fetch(`${API_URL}/api/v1/projects/${projectId}/members/${userId}`, {
+            method: 'DELETE',
+            headers: this.getHeaders(),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to remove project member');
+        }
+    }
+
+    async getTasks(projectId?: string): Promise<Task[]> {
+        const url = projectId
+            ? `${API_URL}/api/v1/tasks/?project_id=${projectId}`
+            : `${API_URL}/api/v1/tasks/`;
+
+        const response = await fetch(url, {
+            headers: this.getHeaders(),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to get tasks');
+        }
+
+        return response.json();
+    }
+
+    async createTask(task: TaskCreate): Promise<Task> {
+        const response = await fetch(`${API_URL}/api/v1/tasks/`, {
+            method: 'POST',
+            headers: this.getHeaders(),
+            body: JSON.stringify(task),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to create task');
+        }
+
+        return response.json();
+    }
+
+    async updateTask(taskId: string, task: Partial<Task>): Promise<Task> {
+        const response = await fetch(`${API_URL}/api/v1/tasks/${taskId}`, {
+            method: 'PUT',
+            headers: this.getHeaders(),
+            body: JSON.stringify(task),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to update task');
+        }
+
+        return response.json();
+    }
+
+    async deleteTask(taskId: string): Promise<void> {
+        const response = await fetch(`${API_URL}/api/v1/tasks/${taskId}`, {
+            method: 'DELETE',
+            headers: this.getHeaders(),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to delete task');
+        }
+    }
+
+    async getGanttChart(projectId: string): Promise<{ tasks: GanttTask[] }> {
+        const response = await fetch(`${API_URL}/api/v1/gantt/${projectId}`, {
+            headers: this.getHeaders(),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to get Gantt chart data');
         }
 
         return response.json();

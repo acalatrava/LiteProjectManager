@@ -8,13 +8,13 @@
         "login": "Iniciar sesión",
         "register": "Registrarse",
         "profile": "Perfil",
-        "dashboard": "Panel",
         "admin": "Administrador",
         "cancel": "Cancelar",
         "saveChanges": "Guardar Cambios",
         "saving": "Guardando...",
-        "appName": "AppName",
-        "allRightsReserved": "Todos los derechos reservados."
+        "appName": "Gestor de Proyectos",
+        "allRightsReserved": "Todos los derechos reservados.",
+        "projects": "Proyectos"
     },
     "auth": {
         "loginTitle": "Iniciar sesión en su cuenta",
