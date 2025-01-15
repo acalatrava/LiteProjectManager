@@ -2,6 +2,7 @@
     import { page } from "$app/stores";
     import { onMount } from "svelte";
     import { api } from "$lib/services/api";
+    import type { GanttTask } from "$lib/types/project";
     import type {
         Project,
         Task,
@@ -13,6 +14,7 @@
     const projectId = $page.params.id;
     let project: Project | null = null;
     let tasks: Task[] = [];
+    let ganttTasks: GanttTask[] = [];
     let projectMembers: (ProjectMember & { user?: User })[] = [];
     let loading = true;
     let error = "";
@@ -44,15 +46,17 @@
         loading = true;
         error = "";
         try {
-            const [projectData, tasksData, membersData, usersData] =
+            const [projectData, tasksData, membersData, usersData, ganttData] =
                 await Promise.all([
                     api.getProject(projectId),
                     api.getTasks(projectId),
                     api.getProjectMembers(projectId),
                     api.getUsers(),
+                    api.getGanttChart(projectId),
                 ]);
             project = projectData;
             tasks = tasksData;
+            ganttTasks = ganttData.tasks;
 
             // Combine member data with user data
             projectMembers = membersData.map((member) => ({
@@ -165,6 +169,65 @@
             console.error(err);
         }
     }
+
+    function getTaskOffset(
+        start: string,
+        projectStart: string | undefined,
+    ): number {
+        if (!projectStart) return 0;
+        const startDate = new Date(start);
+        const projectStartDate = new Date(projectStart);
+        const diffDays = Math.floor(
+            (startDate.getTime() - projectStartDate.getTime()) /
+                (1000 * 60 * 60 * 24),
+        );
+        return (diffDays / 60) * 100; // 60 days view window
+    }
+
+    function getTaskWidth(start: string, end: string): number {
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+        const diffDays = Math.floor(
+            (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+        );
+        return (diffDays / 60) * 100; // 60 days view window
+    }
+
+    function getTaskColor(progress: number): string {
+        if (progress >= 1) {
+            return "bg-green-200 border-green-300";
+        } else if (progress > 0) {
+            return "bg-yellow-200 border-yellow-300";
+        }
+        return "bg-blue-200 border-blue-300";
+    }
+
+    function getProgressColor(progress: number): string {
+        if (progress >= 1) {
+            return "bg-green-500";
+        } else if (progress > 0) {
+            return "bg-yellow-500";
+        }
+        return "bg-blue-500";
+    }
+
+    function formatDate(date: Date): string {
+        return date.toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+        });
+    }
+
+    function getDatesForTimeline(startDate: Date): Date[] {
+        const dates: Date[] = [];
+        for (let i = 0; i < 60; i += 5) {
+            // Show every 5 days for 60 days
+            const date = new Date(startDate);
+            date.setDate(date.getDate() + i);
+            dates.push(date);
+        }
+        return dates;
+    }
 </script>
 
 {#if loading}
@@ -235,6 +298,64 @@
                     </dd>
                 </div>
             </dl>
+        </div>
+
+        <!-- Add this before the task list section -->
+        <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                Project Timeline
+            </h3>
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg p-4">
+                <div class="relative" style="height: 200px;">
+                    <!-- Timeline header -->
+                    <div
+                        class="absolute top-0 left-0 right-0 h-8 flex border-b"
+                    >
+                        {#each getDatesForTimeline(new Date(project?.start_date || Date.now())) as date}
+                            <div class="flex-1 text-xs text-center border-r">
+                                {formatDate(date)}
+                            </div>
+                        {/each}
+                    </div>
+
+                    <!-- Gantt bars -->
+                    <div
+                        class="absolute top-8 left-0 right-0 bottom-0 overflow-y-auto"
+                    >
+                        {#each ganttTasks as task, i}
+                            <div
+                                class="relative h-8 border-b flex items-center"
+                            >
+                                <div
+                                    class="absolute h-6 rounded {getTaskColor(
+                                        task.progress,
+                                    )} border"
+                                    style="
+                                        left: {getTaskOffset(
+                                        task.start,
+                                        project?.start_date,
+                                    )}%;
+                                        width: {getTaskWidth(
+                                        task.start,
+                                        task.end,
+                                    )}%;
+                                    "
+                                >
+                                    <div class="px-2 truncate text-xs">
+                                        {task.name}
+                                    </div>
+                                    <div
+                                        class="absolute top-0 left-0 bottom-0 {getProgressColor(
+                                            task.progress,
+                                        )} opacity-25"
+                                        style="width: {task.progress * 100}%"
+                                    ></div>
+                                </div>
+                            </div>
+                        {/each}
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Tasks Section -->
