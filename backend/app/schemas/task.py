@@ -12,10 +12,15 @@ class TaskBase(BaseModel):
 
 
 class TaskCreate(TaskBase):
-    pass
+    assigned_to_id: Optional[str] = None
 
 
-class TaskUpdate(TaskBase):
+class TaskUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    project_id: Optional[str] = None
+    start_date: Optional[datetime] = None
+    deadline: Optional[datetime] = None
     status: Optional[str] = None
     assigned_to_id: Optional[str] = None
 

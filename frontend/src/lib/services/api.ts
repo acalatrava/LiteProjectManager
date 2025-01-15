@@ -1,7 +1,7 @@
 import type { AuthResponse, RegisterData, User } from '$lib/types/user';
 import type { Sample, SearchResult } from '$lib/types/sample';
 import { env } from '$env/dynamic/public';
-import type { Project, ProjectCreate, ProjectMember, Task, TaskCreate, GanttTask } from '$lib/types/project';
+import type { Project, ProjectCreate, ProjectMember, Task, TaskCreate, GanttTask, Comment, CommentCreate } from '$lib/types/project';
 
 const API_URL = import.meta.env.VITE_API_URL || env.PUBLIC_API_URL;
 
@@ -237,7 +237,7 @@ class ApiService {
         const response = await fetch(`${API_URL}/api/v1/projects/${projectId}/members`, {
             method: 'POST',
             headers: this.getHeaders(),
-            body: JSON.stringify({ user_id: userId, role }),
+            body: JSON.stringify({ user_id: userId, role, project_id: projectId }),
         });
 
         if (!response.ok) {
@@ -320,6 +320,67 @@ class ApiService {
 
         if (!response.ok) {
             throw new Error('Failed to get Gantt chart data');
+        }
+
+        return response.json();
+    }
+
+    async getProject(projectId: string): Promise<Project> {
+        const response = await fetch(`${API_URL}/api/v1/projects/${projectId}`, {
+            headers: this.getHeaders(),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to get project');
+        }
+
+        return response.json();
+    }
+
+    async getTaskComments(taskId: string): Promise<Comment[]> {
+        const response = await fetch(`${API_URL}/api/v1/comments/${taskId}`, {
+            headers: this.getHeaders(),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to get comments');
+        }
+
+        return response.json();
+    }
+
+    async createComment(comment: CommentCreate): Promise<Comment> {
+        const response = await fetch(`${API_URL}/api/v1/comments/`, {
+            method: 'POST',
+            headers: this.getHeaders(),
+            body: JSON.stringify(comment),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to create comment');
+        }
+
+        return response.json();
+    }
+
+    async deleteComment(commentId: string): Promise<void> {
+        const response = await fetch(`${API_URL}/api/v1/comments/${commentId}`, {
+            method: 'DELETE',
+            headers: this.getHeaders(),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to delete comment');
+        }
+    }
+
+    async getTask(taskId: string): Promise<Task> {
+        const response = await fetch(`${API_URL}/api/v1/tasks/${taskId}`, {
+            headers: this.getHeaders(),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to get task');
         }
 
         return response.json();

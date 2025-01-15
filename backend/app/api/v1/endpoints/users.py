@@ -4,7 +4,7 @@ from app.core.endpoints.endpoint import BaseEndpoint
 from app.schemas.base import DefaultResponse
 from app.schemas.users import UserInDB, UserUpdate, UserRole
 from app.db.relational import Users
-from app.services.authentication import admin_user_check
+from app.services.authentication import admin_user_check, user_check
 
 
 class UsersEndpoint(BaseEndpoint):
@@ -45,14 +45,18 @@ class UsersEndpoint(BaseEndpoint):
 
     async def get_users(
         self,
-        admin=Depends(admin_user_check),
+        userinfo=Depends(user_check),
         skip: int = Query(0, ge=0),
         limit: int = Query(50, ge=1, le=100)
     ) -> List[UserInDB]:
         """
         Get list of all users with pagination
         """
-        return Users.get_all_users(skip=skip, limit=limit)
+        if userinfo.is_admin:
+            return Users.get_all_users(skip=skip, limit=limit)
+        else:
+            # TODO: Return only the users where the user is member of projects
+            return Users.get_all_users(skip=skip, limit=limit)
 
     async def get_user(
         self,

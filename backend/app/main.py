@@ -17,6 +17,7 @@ from app.api.v1.endpoints.users import UsersEndpoint
 from app.api.v1.endpoints.projects import ProjectsEndpoint
 from app.api.v1.endpoints.tasks import TasksEndpoint
 from app.api.v1.endpoints.gantt import GanttEndpoint
+from app.api.v1.endpoints.comments import CommentsEndpoint
 
 
 class SPAStaticFiles(StaticFiles):
@@ -147,7 +148,7 @@ api_app.include_router(
     UsersEndpoint().get_router(),
     prefix="/users",
     tags=["users"],
-    dependencies=[Depends(admin_user_check)],
+    dependencies=[Depends(user_check)],
     responses={
         200: {
             "description": "Success",
@@ -183,6 +184,13 @@ api_app.include_router(
     GanttEndpoint().get_router(),
     prefix="/gantt",
     tags=["gantt"]
+)
+
+api_app.include_router(
+    CommentsEndpoint().get_router(),
+    prefix="/comments",
+    tags=["comments"],
+    dependencies=[Depends(user_check)]
 )
 
 app.include_router(api_app)

@@ -188,19 +188,23 @@
                                     {#each projects as project}
                                         <tr>
                                             <td
-                                                class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"
+                                                class="px-6 py-4 whitespace-nowrap"
                                             >
                                                 <a
                                                     href="/projects/{project.id}"
                                                     class="text-primary-600 hover:text-primary-900"
                                                 >
-                                                    {project.name}
+                                                    <div
+                                                        class="text-sm font-medium"
+                                                    >
+                                                        {project.name}
+                                                    </div>
                                                 </a>
-                                            </td>
-                                            <td
-                                                class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
-                                            >
-                                                {project.description}
+                                                <div
+                                                    class="text-sm text-gray-500"
+                                                >
+                                                    {project.description}
+                                                </div>
                                             </td>
                                             <td
                                                 class="whitespace-nowrap px-3 py-4 text-sm"
@@ -212,6 +216,13 @@
                                                 >
                                                     {project.status}
                                                 </span>
+                                            </td>
+                                            <td
+                                                class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
+                                            >
+                                                {new Date(
+                                                    project.start_date,
+                                                ).toLocaleDateString()}
                                             </td>
                                             <td
                                                 class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"

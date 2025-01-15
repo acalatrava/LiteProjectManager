@@ -45,7 +45,7 @@ export interface TaskCreate {
     project_id: string;
     start_date: string;
     deadline: string;
-    assigned_to_id?: string;
+    assigned_to_id?: string | null;
 }
 
 export interface GanttTask {
@@ -55,4 +55,18 @@ export interface GanttTask {
     end: string;
     progress: number;
     dependencies?: string[];
+}
+
+export interface Comment {
+    id: string;
+    task_id: string;
+    user_id: string;
+    content: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface CommentCreate {
+    task_id: string;
+    content: string;
 } 

@@ -20,6 +20,8 @@ from app.schemas.project import (
     ProjectMemberBase
 )
 from app.schemas.task import TaskCreate, TaskUpdate, Task as TaskSchema
+from app.models.comment import Comment as CommentModel
+from app.schemas.comment import CommentCreate, Comment as CommentSchema
 
 
 class UsersTable:
@@ -305,6 +307,16 @@ class ProjectsTable:
         except ProjectModel.DoesNotExist:
             return None
 
+    def update_project_status(self, project_id: str, status: str):
+        try:
+            project = ProjectModel.get(ProjectModel.id == project_id)
+            project.status = status
+            project.updated_at = datetime.now()
+            project.save()
+            return True
+        except ProjectModel.DoesNotExist:
+            return False
+
     def delete_project(self, project_id: str) -> bool:
         try:
             # Delete associated tasks first
@@ -348,6 +360,20 @@ class ProjectsTable:
             })
             for pm in ProjectMemberModel.select().where(ProjectMemberModel.user_id == user_id)
         ]
+
+    def get_project(self, project_id: str) -> Optional[ProjectSchema]:
+        try:
+            project = ProjectModel.get(ProjectModel.id == project_id)
+            return ProjectSchema.model_validate(project.to_dict())
+        except ProjectModel.DoesNotExist:
+            return None
+
+    def get_user_project(self, user_id: str, project_id: str) -> Optional[ProjectSchema]:
+        try:
+            project = ProjectModel.get(ProjectModel.id == project_id)
+            return ProjectSchema.model_validate(project.to_dict())
+        except ProjectModel.DoesNotExist:
+            return None
 
     def is_project_manager(self, user_id: str, project_id: str) -> bool:
         try:
@@ -403,6 +429,14 @@ class ProjectsTable:
         except:
             return False
 
+    def is_project_member(self, user_id: str, project_id: str) -> bool:
+        print("project_id", project_id)
+        print("user_id", user_id)
+        return ProjectMemberModel.select().where(
+            (ProjectMemberModel.user_id == user_id) &
+            (ProjectMemberModel.project_id == project_id)
+        ).exists()
+
 
 class TasksTable:
     def __init__(self):
@@ -419,6 +453,7 @@ class TasksTable:
             start_date=task.start_date,
             deadline=task.deadline,
             created_by_id=created_by,
+            assigned_to_id=task.assigned_to_id,
             created_at=datetime.now(),
             updated_at=datetime.now()
         )
@@ -488,7 +523,29 @@ class TasksTable:
         except TaskModel.DoesNotExist:
             return None
 
-    def get_all_tasks(self) -> List[TaskSchema]:
+    def get_user_task(self, user_id: str, task_id: str) -> Optional[TaskSchema]:
+        try:
+            task = TaskModel.get(
+                (TaskModel.id == task_id) &
+                (TaskModel.assigned_to_id == user_id)
+            )
+            return TaskSchema.model_validate({
+                "id": task.id,
+                "name": task.name,
+                "description": task.description,
+                "project_id": task.project_id,
+                "start_date": task.start_date,
+                "deadline": task.deadline,
+                "assigned_to_id": task.assigned_to_id,
+                "created_by_id": task.created_by_id,
+                "status": task.status,
+                "created_at": task.created_at,
+                "updated_at": task.updated_at
+            })
+        except TaskModel.DoesNotExist:
+            return None
+
+    def get_all_tasks(self, project_id: str) -> List[TaskSchema]:
         return [
             TaskSchema.model_validate({
                 "id": t.id,
@@ -503,10 +560,10 @@ class TasksTable:
                 "created_at": t.created_at,
                 "updated_at": t.updated_at
             })
-            for t in TaskModel.select()
+            for t in TaskModel.select().where(TaskModel.project_id == project_id)
         ]
 
-    def get_user_tasks(self, user_id: str) -> List[TaskSchema]:
+    def get_user_tasks(self, user_id: str, project_id: str) -> List[TaskSchema]:
         return [
             TaskSchema.model_validate({
                 "id": t.id,
@@ -523,7 +580,8 @@ class TasksTable:
             })
             for t in TaskModel.select().where(
                 (TaskModel.assigned_to_id == user_id) |
-                (TaskModel.created_by_id == user_id)
+                (TaskModel.created_by_id == user_id) |
+                (TaskModel.project_id == project_id)
             )
         ]
 
@@ -546,6 +604,38 @@ class TasksTable:
         ]
 
 
+class CommentsTable:
+    def __init__(self):
+        with get_db():
+            DB.create_tables([CommentModel])
+
+    def create_comment(self, comment: CommentCreate, user_id: str) -> CommentSchema:
+        comment_id = str(uuid.uuid4())
+        comment_db = CommentModel.create(
+            id=comment_id,
+            task_id=comment.task_id,
+            user_id=user_id,
+            content=comment.content,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        return CommentSchema.model_validate(comment_db.to_dict())
+
+    def get_task_comments(self, task_id: str) -> List[CommentSchema]:
+        return [
+            CommentSchema.model_validate(comment.to_dict())
+            for comment in CommentModel.select().where(CommentModel.task_id == task_id)
+        ]
+
+    def delete_comment(self, comment_id: str) -> bool:
+        try:
+            CommentModel.delete().where(CommentModel.id == comment_id).execute()
+            return True
+        except:
+            return False
+
+
 Users = UsersTable()
 Projects = ProjectsTable()
 Tasks = TasksTable()
+Comments = CommentsTable()

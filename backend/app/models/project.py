@@ -15,6 +15,19 @@ class Project(BaseModel):
     status = CharField(default='pending')  # pending, in_progress, completed
     is_active = BooleanField(default=True)
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "start_date": self.start_date,
+            "deadline": self.deadline,
+            "status": self.status,
+            "is_active": self.is_active,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at
+        }
+
 
 class ProjectMember(BaseModel):
     id = CharField(primary_key=True)

@@ -14,12 +14,22 @@ class ProjectsEndpoint(BaseEndpoint):
 
         self.router.get("/", response_model=List[Project])(self.get_projects)
         self.router.post("/", response_model=Project)(self.create_project)
+        self.router.get("/{project_id}", response_model=Project)(self.get_project)
         self.router.put("/{project_id}", response_model=Project)(self.update_project)
         self.router.delete("/{project_id}", response_model=DefaultResponse)(self.delete_project)
         self.router.get("/{project_id}/members", response_model=List[ProjectMember])(self.get_project_members)
         self.router.post("/{project_id}/members", response_model=ProjectMember)(self.add_project_member)
         self.router.delete("/{project_id}/members/{user_id}",
                            response_model=DefaultResponse)(self.remove_project_member)
+
+    async def get_project(self, project_id: str = Path(...), userinfo=Depends(user_check)) -> Project:
+        if userinfo.role == UserRole.ADMIN:
+            project = Projects.get_project(project_id)
+        else:
+            project = Projects.get_user_project(userinfo.id, project_id)
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+        return project
 
     async def get_projects(self, userinfo=Depends(user_check)) -> List[Project]:
         if userinfo.role == UserRole.ADMIN:

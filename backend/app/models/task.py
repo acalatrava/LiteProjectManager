@@ -7,13 +7,13 @@ from .user import User
 
 class Task(BaseModel):
     id = CharField(primary_key=True)
-    project = ForeignKeyField(Project, backref='tasks')
     name = CharField()
     description = TextField()
-    assigned_to = ForeignKeyField(User, backref='assigned_tasks', null=True)
-    created_by = ForeignKeyField(User, backref='created_tasks')
-    status = CharField(default='pending')  # pending, in_progress, completed
+    project_id = CharField()
     start_date = DateTimeField()
     deadline = DateTimeField()
+    assigned_to_id = CharField(null=True)  # Make sure this is nullable
+    created_by_id = CharField()
+    status = CharField(default='pending')  # pending, in_progress, completed
     created_at = DateTimeField(default=datetime.now)
     updated_at = DateTimeField(default=datetime.now)
