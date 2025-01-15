@@ -303,7 +303,7 @@
         <!-- Add this before the task list section -->
         <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
             <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-                Project Timeline
+                {$_("common.timeline")}
             </h3>
             <div class="bg-white shadow overflow-hidden sm:rounded-lg p-4">
                 <div class="relative" style="height: 200px;">
@@ -362,18 +362,18 @@
         <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg leading-6 font-medium text-gray-900">
-                    Tasks
+                    {$_("common.tasks")}
                 </h3>
                 <button
                     on:click={() => (showCreateTaskModal = true)}
                     class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                 >
-                    Add Task
+                    {$_("common.addTask")}
                 </button>
             </div>
 
             {#if tasks.length === 0}
-                <p class="text-sm text-gray-500">No tasks yet.</p>
+                <p class="text-sm text-gray-500">{$_("common.noTasks")}</p>
             {:else}
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
@@ -383,25 +383,25 @@
                                     scope="col"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                 >
-                                    Name
+                                    {$_("common.taskName")}
                                 </th>
                                 <th
                                     scope="col"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                 >
-                                    Status
+                                    {$_("common.taskStatus")}
                                 </th>
                                 <th
                                     scope="col"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                 >
-                                    Deadline
+                                    {$_("common.taskDeadline")}
                                 </th>
                                 <th
                                     scope="col"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                 >
-                                    Assigned To
+                                    {$_("common.taskAssignTo")}
                                 </th>
                             </tr>
                         </thead>
@@ -452,7 +452,11 @@
                                                 )}
                                             class="block w-full pl-3 pr-10 py-1 text-sm border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 rounded-md"
                                         >
-                                            <option value="">Unassigned</option>
+                                            <option value=""
+                                                >{$_(
+                                                    "common.taskUnassigned",
+                                                )}</option
+                                            >
                                             {#each projectMembers as member}
                                                 <option value={member.user_id}>
                                                     {member.user?.name ||
@@ -474,13 +478,13 @@
         <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg leading-6 font-medium text-gray-900">
-                    Project Members
+                    {$_("common.projectMembers")}
                 </h3>
                 <button
                     on:click={() => (showAddMemberModal = true)}
                     class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                 >
-                    Add Member
+                    {$_("common.addMember")}
                 </button>
             </div>
             <div class="bg-white shadow overflow-hidden sm:rounded-lg">
@@ -574,7 +578,7 @@
                             class="text-lg leading-6 font-medium text-gray-900"
                             id="modal-title"
                         >
-                            Create New Task
+                            {$_("common.createTask")}
                         </h3>
                         <div class="mt-2">
                             <div class="space-y-6">
@@ -667,7 +671,11 @@
                                             bind:value={newTask.assigned_to_id}
                                             class="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
                                         >
-                                            <option value="">Unassigned</option>
+                                            <option value=""
+                                                >{$_(
+                                                    "common.taskUnassigned",
+                                                )}</option
+                                            >
                                             {#each projectMembers as member}
                                                 <option value={member.user_id}>
                                                     {member.user?.name ||
@@ -686,14 +694,14 @@
                             type="submit"
                             class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:col-start-2 sm:text-sm"
                         >
-                            Create
+                            {$_("common.create")}
                         </button>
                         <button
                             type="button"
                             on:click={() => (showCreateTaskModal = false)}
                             class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:col-start-1 sm:text-sm"
                         >
-                            Cancel
+                            {$_("common.cancel")}
                         </button>
                     </div>
                 </form>
@@ -730,7 +738,7 @@
                             class="text-lg leading-6 font-medium text-gray-900"
                             id="modal-title"
                         >
-                            Add Project Member
+                            {$_("common.addMember")}
                         </h3>
                         <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4">
                             <div>
@@ -745,7 +753,9 @@
                                     bind:value={newMember.user_id}
                                     class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 rounded-md"
                                 >
-                                    <option value="">Select a user</option>
+                                    <option value=""
+                                        >{$_("common.selectUser")}</option
+                                    >
                                     {#each availableUsers as user}
                                         <option value={user.id}>
                                             {user.name || user.username}
@@ -781,14 +791,14 @@
                             type="submit"
                             class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:col-start-2 sm:text-sm"
                         >
-                            Add Member
+                            {$_("common.addMember")}
                         </button>
                         <button
                             type="button"
                             on:click={() => (showAddMemberModal = false)}
                             class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:col-start-1 sm:text-sm"
                         >
-                            Cancel
+                            {$_("common.cancel")}
                         </button>
                     </div>
                 </form>
