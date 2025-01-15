@@ -3,7 +3,6 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.db.database import DB
 from app.models.user import User
-from app.models.sample import Sample
 from app.models.auth_token import AuthToken
 import os
 import tempfile
@@ -31,7 +30,7 @@ def test_db(test_db_path):
     # Create tables
     from app.models.project import Project, ProjectMember
     from app.models.task import Task
-    DB.create_tables([User, Sample, AuthToken, Project, ProjectMember, Task])
+    DB.create_tables([User, AuthToken, Project, ProjectMember, Task])
 
     yield DB
 

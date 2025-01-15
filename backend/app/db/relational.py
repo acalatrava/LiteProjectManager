@@ -6,9 +6,7 @@ from typing import List, Optional
 from playhouse.shortcuts import model_to_dict
 
 from app.models.user import User
-from app.models.sample import Sample
 from app.schemas.users import UserRole, UserInDB
-from app.schemas.sample import SampleModel
 from .database import DB, get_db
 from app.models.auth_token import AuthToken
 from app.core.config import AUTH_TOKEN_LIFETIME
@@ -22,80 +20,6 @@ from app.schemas.project import (
     ProjectMemberBase
 )
 from app.schemas.task import TaskCreate, TaskUpdate, Task as TaskSchema
-
-
-class SampleTable:
-    def __init__(self):
-        with get_db():
-            DB.create_tables([Sample])
-
-    def delete_data_by_id(self, id: str) -> bool:
-        try:
-            query = Sample.delete().where(Sample.id == id)
-            query.execute()
-
-            return True
-        except:
-            return False
-
-    def delete_all_data(self) -> bool:
-        try:
-            query = Sample.delete()
-            query.execute()
-
-            return True
-        except:
-            return False
-
-    def delete_specific_data(self, info: str) -> bool:
-        try:
-            query = Sample.delete().where(Sample.info == info)
-            query.execute()
-
-            return True
-        except:
-            return False
-
-    def delete_data_by_date(self, date: datetime) -> bool:
-        try:
-            query = Sample.delete().where(Sample.date == date)
-            query.execute()
-
-            return True
-        except:
-            return False
-
-    def insert_new_data(
-        self, info: str
-    ) -> Optional[SampleModel]:
-        # Create new data with a UUID as string ID
-        sample_id = str(uuid.uuid4())
-        Sample.create(
-            id=sample_id,
-            date=datetime.now(),
-            info=info
-        )
-        return SampleModel(
-            id=sample_id,
-            date=datetime.now(),
-            info=info
-        )
-
-    def get_all_data(self, skip: int = 0, limit: int = 50) -> List[SampleModel]:
-        return [
-            SampleModel(id=str(sample.id), date=sample.date, info=sample.info)
-            for sample in Sample.select().limit(limit).offset(skip)
-        ]
-
-    def search_samples(self, query: str, skip: int = 0, limit: int = 50) -> List[SampleModel]:
-        # Case-insensitive search in the info field
-        return [
-            SampleModel(id=str(sample.id), date=sample.date, info=sample.info)
-            for sample in Sample.select()
-            .where(Sample.info.contains(query))
-            .limit(limit)
-            .offset(skip)
-        ]
 
 
 class UsersTable:
@@ -623,6 +547,5 @@ class TasksTable:
 
 
 Users = UsersTable()
-Samples = SampleTable()
 Projects = ProjectsTable()
 Tasks = TasksTable()

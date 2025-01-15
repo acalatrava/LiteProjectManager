@@ -1,9 +1,7 @@
 import uuid
 from fastapi import Depends, FastAPI, HTTPException, status, APIRouter, Form
 from app.core import config
-from app.api.v1.endpoints.search import SearchEndpoint
 from app.api.v1.endpoints.userinfo import UserInfoEndpoint
-from app.api.v1.endpoints.sample import SampleEndpoint
 from typing import Annotated
 from fastapi.security import OAuth2PasswordRequestForm
 from app.db.relational import Users
@@ -143,20 +141,6 @@ api_app.include_router(
             }
         }
     }
-)
-
-api_app.include_router(
-    SearchEndpoint().get_router(),
-    prefix="/search",
-    tags=["search"],
-    dependencies=[Depends(user_check)]
-)
-
-api_app.include_router(
-    SampleEndpoint().get_router(),
-    prefix="/sample",
-    tags=["samples"],
-    dependencies=[Depends(user_check)]
 )
 
 api_app.include_router(
