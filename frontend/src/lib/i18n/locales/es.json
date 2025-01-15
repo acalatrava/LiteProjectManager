@@ -12,7 +12,7 @@
         "cancel": "Cancelar",
         "saveChanges": "Guardar Cambios",
         "saving": "Guardando...",
-        "appName": "Gestor de Proyectos",
+        "appName": "Lite Project Manager",
         "allRightsReserved": "Todos los derechos reservados.",
         "projects": "Proyectos",
         "back": "Volver a Proyectos",
@@ -164,36 +164,36 @@
     },
     "landing": {
         "hero": {
-            "title1": "Solución Moderna para",
-            "title2": "Las Necesidades de su Negocio",
-            "description": "Optimice sus operaciones con nuestra potente plataforma. Gestione datos, busque eficientemente y tome decisiones informadas con facilidad.",
+            "title1": "Gestión de Proyectos",
+            "title2": "Simple y Eficiente",
+            "description": "Gestione sus proyectos, tareas y equipos con facilidad. Realice seguimiento del progreso, colabore con los miembros del equipo y entregue resultados a tiempo.",
             "getStarted": "Comenzar",
             "dashboard": "Ir al Panel"
         },
         "features": {
-            "title": "Una mejor manera de gestionar sus datos",
-            "description": "Todo lo que necesita para manejar los datos de su negocio de manera eficiente y segura.",
+            "title": "Todo lo que necesita para gestionar proyectos",
+            "description": "Características simples pero potentes para mantener sus proyectos en marcha.",
             "powerfulFeatures": {
                 "title": "Funciones Potentes",
-                "description": "Nuestra plataforma proporciona todas las herramientas que necesita para tener éxito."
+                "description": "Herramientas esenciales para una gestión exitosa de proyectos."
             },
-            "search": {
-                "title": "Búsqueda Avanzada",
-                "description": "Encuentre exactamente lo que necesita con nuestra potente funcionalidad de búsqueda."
+            "tasks": {
+                "title": "Gestión de Tareas",
+                "description": "Cree, asigne y realice seguimiento de tareas fácilmente. Mantenga a todos alineados con plazos y responsabilidades claras."
             },
-            "security": {
-                "title": "Seguro por Diseño",
-                "description": "Sus datos están protegidos con seguridad de nivel empresarial."
+            "teams": {
+                "title": "Colaboración en Equipo",
+                "description": "Trabaje juntos de manera efectiva con acceso basado en roles y funciones de gestión de equipos."
             },
-            "analytics": {
-                "title": "Análisis Perspicaz",
-                "description": "Tome decisiones basadas en datos con análisis completos."
+            "timeline": {
+                "title": "Línea de Tiempo Visual",
+                "description": "Realice seguimiento del progreso del proyecto con una vista intuitiva de diagrama de Gantt."
             }
         },
         "cta": {
             "title1": "¿Listo para comenzar?",
-            "title2": "Comience su prueba gratuita hoy.",
-            "description": "Únase a miles de usuarios satisfechos que confían en nuestra plataforma.",
+            "title2": "Comience a gestionar sus proyectos hoy.",
+            "description": "Únase a los equipos que confían en Lite Project Manager para entregar sus proyectos con éxito.",
             "button": "Regístrese gratis"
         }
     }

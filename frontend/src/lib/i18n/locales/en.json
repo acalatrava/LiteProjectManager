@@ -12,7 +12,7 @@
         "cancel": "Cancel",
         "saveChanges": "Save Changes",
         "saving": "Saving...",
-        "appName": "Project Manager",
+        "appName": "Lite Project Manager",
         "allRightsReserved": "All rights reserved.",
         "projects": "Projects",
         "back": "Back to Projects",
@@ -164,36 +164,36 @@
     },
     "landing": {
         "hero": {
-            "title1": "Modern Solution for",
-            "title2": "Your Business Needs",
-            "description": "Streamline your operations with our powerful platform. Manage data, search efficiently, and make informed decisions with ease.",
+            "title1": "Simple and Efficient",
+            "title2": "Project Management",
+            "description": "Manage your projects, tasks and teams with ease. Track progress, collaborate with team members, and deliver results on time.",
             "getStarted": "Get started",
             "dashboard": "Go to Dashboard"
         },
         "features": {
-            "title": "A better way to manage your data",
-            "description": "Everything you need to handle your business data efficiently and securely.",
+            "title": "Everything you need to manage projects",
+            "description": "Simple yet powerful features to keep your projects on track.",
             "powerfulFeatures": {
                 "title": "Powerful Features",
-                "description": "Our platform provides all the tools you need to succeed."
+                "description": "Essential tools for successful project management."
             },
-            "search": {
-                "title": "Advanced Search",
-                "description": "Find exactly what you need with our powerful search functionality."
+            "tasks": {
+                "title": "Task Management",
+                "description": "Create, assign and track tasks easily. Keep everyone aligned with clear deadlines and responsibilities."
             },
-            "security": {
-                "title": "Secure by Design",
-                "description": "Your data is protected with enterprise-grade security."
+            "teams": {
+                "title": "Team Collaboration",
+                "description": "Work together effectively with role-based access and team management features."
             },
-            "analytics": {
-                "title": "Insightful Analytics",
-                "description": "Make data-driven decisions with comprehensive analytics."
+            "timeline": {
+                "title": "Visual Timeline",
+                "description": "Track project progress with an intuitive Gantt chart view."
             }
         },
         "cta": {
             "title1": "Ready to get started?",
-            "title2": "Start your free trial today.",
-            "description": "Join thousands of satisfied users who trust our platform.",
+            "title2": "Start managing your projects today.",
+            "description": "Join teams who trust Lite Project Manager to deliver their projects successfully.",
             "button": "Sign up for free"
         }
     }
