@@ -53,6 +53,14 @@ async def get_db_session():
         yield session
 
 
+# Add this near the top with other functions
+def validate_email_domain(email: str) -> bool:
+    whitelist_domain = config.WHITELIST_DOMAIN
+    if not whitelist_domain:
+        return True
+    return email.lower().endswith(f"@{whitelist_domain.lower()}")
+
+
 # Create new user
 @app.post("/signup",
           response_model=dict,
@@ -71,6 +79,12 @@ async def signup(
     - **password**: Secret password for authentication
     - **name**: Optional full name of the user
     """
+    if not validate_email_domain(form_data.username):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email domain not allowed. Please use your company email."
+        )
+
     user = Users.insert_new_user(username=form_data.username, password=form_data.password, name=form_data.name)
 
     # Create a login token
