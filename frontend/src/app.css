@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Optional: Add custom styles here */
+html {
+    @apply antialiased;
+}
+
+body {
+    @apply bg-gray-50;
+}
+
+/* Add smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Improve default focus styles */
+*:focus {
+    @apply outline-none ring-2 ring-primary-500 ring-offset-2;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    @apply w-2;
+}
+
+::-webkit-scrollbar-track {
+    @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full hover:bg-gray-400;
+}

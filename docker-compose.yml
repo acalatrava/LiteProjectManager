@@ -1,0 +1,19 @@
+version: "3.4"
+
+services:
+  backend:
+    build:
+      context: ./backend
+    volumes:
+      - ./backend/data:/app/backend/data
+      - .env:/app/backend/.env
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "80:3000"
+    environment:
+      - PUBLIC_API_URL

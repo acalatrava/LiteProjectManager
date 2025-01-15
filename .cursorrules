@@ -1,0 +1,68 @@
+# App Template Structure and Conventions
+
+## Project Overview
+This is a full-stack application template with FastAPI backend and SvelteKit frontend.
+Both services are containerized using Docker.
+
+## Backend (FastAPI)
+Directory: /backend
+
+### Structure
+- app/
+  - api/v1/endpoints/  # API route handlers
+  - core/             # Core configurations
+  - db/               # Database handling
+  - models/           # Database models
+  - schemas/          # Pydantic schemas
+  - services/         # Business logic
+
+### Key Components
+1. Authentication:
+   - token-based auth
+   - User roles (Admin/User)
+   - Password hashing
+
+2. Database:
+   - SQLite with Peewee ORM
+   - WAL mode enabled
+   - Located at SQLITE_PATH from .env
+
+3. Configuration:
+   - Load from .env file
+   - Required variables:
+     - PROJECT_NAME
+     - PROJECT_VERSION
+     - SECRET_KEY
+     - SQLITE_PATH
+     - AUTH_TOKEN_LIFETIME
+
+4. API Endpoints:
+   - /api/v1/userinfo/  # User profile management
+   - /api/v1/users/     # Admin user management
+   - /api/v1/search/    # Sample search functionality (should be replaced with actual search functionality or removed if not needed)
+   - /api/v1/sample/    # Sample endpoint to add/remove/edit items (should be replaced with other endpoints requested by the client)
+
+## Frontend (SvelteKit)
+Directory: /frontend
+
+### Structure
+- src/
+  - lib/           # Shared components
+  - routes/        # Page components
+  - i18n/          # Internationalization
+
+### Key Features
+1. Authentication:
+   - Protected routes
+   - Login/Register flows
+   - Token management
+
+2. Internationalization:
+   - English/Spanish support
+   - Dynamic language switching
+
+3. Protected Routes:
+   - /dashboard/   # Main user dashboard
+   - /profile/     # User profile
+   - /admin/       # Admin panel
+

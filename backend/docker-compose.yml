@@ -1,0 +1,17 @@
+version: '3.4'
+services:
+  app:
+    build:
+      context: .
+    restart: unless-stopped
+    container_name: app
+    volumes:
+      - .env:/app/.env
+      - data:/app/data
+    ports:
+      - "80:8000"
+    environment:
+      - WEB_CONCURRENCY=4
+
+volumes:
+  data:
