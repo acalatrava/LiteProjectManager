@@ -6,6 +6,7 @@ from app.services.authentication import user_check
 from app.db.relational import Tasks, Projects, Users
 from typing import List
 from app.services.email_service import EmailService
+from app.core.config import SERVER_URL
 
 
 class TasksEndpoint(BaseEndpoint):
@@ -61,7 +62,7 @@ class TasksEndpoint(BaseEndpoint):
         if created_task.assigned_to_id:
             assigned_user = Users.get_user_by_id(created_task.assigned_to_id)
             project = Projects.get_project(created_task.project_id)
-            task_url = f"/projects/{created_task.project_id}/tasks/{created_task.id}"
+            task_url = f"{SERVER_URL}/projects/{created_task.project_id}/tasks/{created_task.id}"
             EmailService.notify_task_assignment(
                 assigned_user.username,
                 created_task.name,
@@ -98,7 +99,7 @@ class TasksEndpoint(BaseEndpoint):
         if task.assigned_to_id and task.assigned_to_id != current_task.assigned_to_id:
             assigned_user = Users.get_user_by_id(task.assigned_to_id)
             project = Projects.get_project(current_task.project_id)
-            task_url = f"/projects/{current_task.project_id}/tasks/{task_id}"
+            task_url = f"{SERVER_URL}/projects/{current_task.project_id}/tasks/{task_id}"
             EmailService.notify_task_assignment(
                 assigned_user.username,
                 updated.name,

@@ -8,6 +8,7 @@ from typing import List
 from app.schemas.users import UserRole
 from app.services.email_service import EmailService
 from app.db.relational import Users
+from app.core.config import SERVER_URL
 
 
 class ProjectsEndpoint(BaseEndpoint):
@@ -88,7 +89,7 @@ class ProjectsEndpoint(BaseEndpoint):
         # Send email notification to the new member
         project = Projects.get_project(project_id)
         user = Users.get_user_by_id(member.user_id)
-        project_url = f"/projects/{project_id}"
+        project_url = f"{SERVER_URL}/projects/{project_id}"
 
         EmailService.notify_project_assignment(
             user.username,
