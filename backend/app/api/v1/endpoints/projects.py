@@ -87,7 +87,7 @@ class ProjectsEndpoint(BaseEndpoint):
 
         # Send email notification to the new member
         project = Projects.get_project(project_id)
-        user = Users.get_user(member.user_id)
+        user = Users.get_user_by_id(member.user_id)
         project_url = f"/projects/{project_id}"
 
         EmailService.notify_project_assignment(
