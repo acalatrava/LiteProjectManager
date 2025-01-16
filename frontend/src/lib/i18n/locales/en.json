@@ -38,7 +38,9 @@
         "selectUser": "Select a user",
         "role": "Role",
         "user": "User",
-        "unknownUser": "Unknown User"
+        "unknownUser": "Unknown User",
+        "actions": "Actions",
+        "confirmDelete": "Are you sure you want to delete this task?"
     },
     "auth": {
         "loginTitle": "Login to your account",

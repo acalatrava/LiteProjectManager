@@ -38,7 +38,9 @@
         "selectUser": "Seleccionar usuario",
         "role": "Rol",
         "user": "Usuario",
-        "unknownUser": "Usuario Desconocido"
+        "unknownUser": "Usuario Desconocido",
+        "actions": "Acciones",
+        "confirmDelete": "¿Está seguro de que desea eliminar esta tarea?"
     },
     "auth": {
         "loginTitle": "Iniciar sesión en su cuenta",
