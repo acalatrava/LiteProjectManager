@@ -58,6 +58,17 @@ class TasksEndpoint(BaseEndpoint):
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))
 
+        # Check project status and update if needed
+        project = Projects.get_project(task.project_id)
+        if project.status == "completed":
+            Projects.update_project_status(task.project_id, "in_progress")
+            # Notify project members about project being reopened
+            project_members = Projects.get_project_members(task.project_id)
+            member_ids = [member.user_id for member in project_members]
+            member_users = [Users.get_user_by_id(member_id) for member_id in member_ids]
+            member_emails = [user.username for user in member_users]
+            EmailService.notify_project_reopened(member_emails, project.name)
+
         # Send email notification if task is assigned
         if created_task.assigned_to_id:
             assigned_user = Users.get_user_by_id(created_task.assigned_to_id)
@@ -91,6 +102,64 @@ class TasksEndpoint(BaseEndpoint):
             updated = Tasks.update_task(task_id, task)
             if not updated:
                 raise HTTPException(status_code=404, detail="Task not found")
+
+            # Check if we need to update project status
+            if task.status:
+                project_tasks = Tasks.get_project_tasks(current_task.project_id)
+                all_completed = True
+                has_in_progress = False
+
+                for t in project_tasks:
+                    if t.status != "completed":
+                        all_completed = False
+                    if t.status == "in_progress":
+                        has_in_progress = True
+
+                project = Projects.get_project(current_task.project_id)
+                new_status = None
+
+                if all_completed and project.status != "completed":
+                    new_status = "completed"
+                    # Get project members for notification
+                    project_members = Projects.get_project_members(current_task.project_id)
+                    member_ids = [member.user_id for member in project_members]
+                    member_users = [Users.get_user_by_id(member_id) for member_id in member_ids]
+                    member_emails = [user.username for user in member_users]
+                    # Notify about project completion
+                    EmailService.notify_project_completed(member_emails, project.name)
+                elif has_in_progress:
+                    new_status = "in_progress"
+
+                if new_status:
+                    Projects.update_project_status(current_task.project_id, new_status)
+
+            # Handle task assignment notification
+            if task.assigned_to_id and task.assigned_to_id != current_task.assigned_to_id:
+                assigned_user = Users.get_user_by_id(task.assigned_to_id)
+                project = Projects.get_project(current_task.project_id)
+                task_url = f"{SERVER_URL}/projects/{current_task.project_id}/tasks/{task_id}"
+                EmailService.notify_task_assignment(
+                    assigned_user.username,
+                    updated.name,
+                    project.name,
+                    task_url
+                )
+
+            # Handle task completion notification
+            if task.status == "completed" and current_task.status != "completed":
+                project = Projects.get_project(current_task.project_id)
+                project_members = Projects.get_project_members(current_task.project_id)
+                member_ids = [member.user_id for member in project_members]
+                member_users = [Users.get_user_by_id(member_id) for member_id in member_ids]
+                member_emails = [user.username for user in member_users]
+                # Notify about task completion
+                EmailService.notify_task_completed(
+                    member_emails,
+                    updated.name,
+                    project.name,
+                    userinfo.name or userinfo.username
+                )
+
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))
 

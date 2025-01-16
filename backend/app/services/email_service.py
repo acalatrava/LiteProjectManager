@@ -98,3 +98,12 @@ class EmailService:
         <p>Best regards,<br>Project Manager Team</p>
         """
         return EmailService.send_email([username], subject, html_content)
+
+    @staticmethod
+    def notify_project_reopened(emails: List[str], project_name: str):
+        subject = f"Project {project_name} has been reopened"
+        content = f"""
+            The project {project_name} has been reopened due to new tasks being added.
+            Please check the project status and any new assignments.
+        """
+        EmailService.send_email(emails, subject, content)
