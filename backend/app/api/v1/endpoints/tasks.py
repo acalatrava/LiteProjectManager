@@ -40,7 +40,14 @@ class TasksEndpoint(BaseEndpoint):
             tasks = Tasks.get_user_tasks(userinfo.id, project_id)
 
         # Sort tasks by deadline, None values go last
-        return sorted(tasks, key=lambda x: (x.deadline is None, x.deadline or ""))
+        def sort_key(x):
+            if x.deadline is None:
+                return (True, None)
+            # Convert to naive datetime if aware
+            deadline = x.deadline.replace(tzinfo=None) if x.deadline.tzinfo else x.deadline
+            return (False, deadline)
+
+        return sorted(tasks, key=sort_key)
 
     async def create_task(
         self,

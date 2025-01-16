@@ -121,6 +121,22 @@
         }
     }
 
+    function getTaskRowClass(task: Task) {
+        if (task.status === "completed") return "bg-green-100";
+
+        const deadline = new Date(task.deadline);
+        const now = new Date();
+        const oneWeek = 7 * 24 * 60 * 60 * 1000;
+
+        if (deadline < now) {
+            return "bg-red-200";
+        } else if (deadline.getTime() - now.getTime() < oneWeek) {
+            return "bg-orange-100";
+        }
+
+        return "bg-blue-100";
+    }
+
     async function handleReassignTask(
         taskId: string,
         newAssigneeId: string | null,
@@ -431,7 +447,7 @@
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             {#each tasks as task}
-                                <tr>
+                                <tr class={getTaskRowClass(task)}>
                                     <td class="px-6 py-4">
                                         <div
                                             class="text-sm font-medium text-gray-900"
