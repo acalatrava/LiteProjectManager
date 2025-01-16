@@ -3,8 +3,9 @@ from app.core.endpoints.endpoint import BaseEndpoint
 from app.schemas.task import Task, TaskCreate, TaskUpdate
 from app.schemas.base import DefaultResponse
 from app.services.authentication import user_check
-from app.db.relational import Tasks, Projects
+from app.db.relational import Tasks, Projects, Users
 from typing import List
+from app.services.email_service import EmailService
 
 
 class TasksEndpoint(BaseEndpoint):
@@ -54,7 +55,21 @@ class TasksEndpoint(BaseEndpoint):
 
         Projects.update_project_status(task.project_id, "in_progress")
 
-        return Tasks.create_task(task, created_by=userinfo.id)
+        created_task = Tasks.create_task(task, created_by=userinfo.id)
+
+        # Send email if task is assigned to someone
+        if created_task.assigned_to_id:
+            assigned_user = Users.get_user(created_task.assigned_to_id)
+            project = Projects.get_project(created_task.project_id)
+            task_url = f"/projects/{created_task.project_id}/tasks/{created_task.id}"
+            EmailService.notify_task_assignment(
+                assigned_user.username,
+                created_task.name,
+                project.name,
+                task_url
+            )
+
+        return created_task
 
     async def update_task(
         self,
@@ -79,17 +94,38 @@ class TasksEndpoint(BaseEndpoint):
         if not updated:
             raise HTTPException(status_code=404, detail="Task not found")
 
-        # Update project status based on tasks
-        if task.status:  # Only if status is being updated
-            project_tasks = Tasks.get_project_tasks(current_task.project_id)
+        # Handle task assignment notification
+        if task.assigned_to_id and task.assigned_to_id != current_task.assigned_to_id:
+            assigned_user = Users.get_user(task.assigned_to_id)
+            project = Projects.get_project(current_task.project_id)
+            task_url = f"/projects/{current_task.project_id}/tasks/{task_id}"
+            EmailService.notify_task_assignment(
+                assigned_user.username,
+                updated.name,
+                project.name,
+                task_url
+            )
 
-            if task.status == "completed":
-                # Check if all tasks are completed
-                all_completed = all(t.status == "completed" for t in project_tasks)
-                if all_completed:
-                    Projects.update_project_status(current_task.project_id, "completed")
-            else:
-                Projects.update_project_status(current_task.project_id, "in_progress")
+        # Handle task completion notification
+        if task.status == "completed" and current_task.status != "completed":
+            project = Projects.get_project(current_task.project_id)
+            project_members = Projects.get_project_members(current_task.project_id)
+            member_emails = [member.username for member in project_members]
+
+            # Notify about task completion
+            EmailService.notify_task_completed(
+                member_emails,
+                updated.name,
+                project.name,
+                userinfo.name or userinfo.username
+            )
+
+            # Check if all tasks are completed
+            project_tasks = Tasks.get_project_tasks(current_task.project_id)
+            if all(t.status == "completed" for t in project_tasks):
+                Projects.update_project_status(current_task.project_id, "completed")
+                # Notify about project completion
+                EmailService.notify_project_completed(member_emails, project.name)
 
         return updated
 

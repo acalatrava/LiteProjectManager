@@ -6,6 +6,8 @@ from app.services.authentication import admin_user_check, user_check
 from app.db.relational import Projects
 from typing import List
 from app.schemas.users import UserRole
+from app.services.email_service import EmailService
+from app.db.relational import Users
 
 
 class ProjectsEndpoint(BaseEndpoint):
@@ -80,7 +82,21 @@ class ProjectsEndpoint(BaseEndpoint):
     ) -> ProjectMember:
         if not Projects.is_project_manager(userinfo.id, project_id) and userinfo.role != UserRole.ADMIN:
             raise HTTPException(status_code=403, detail="Only project managers can add members")
-        return Projects.add_project_member(project_id, member)
+
+        added_member = Projects.add_project_member(project_id, member)
+
+        # Send email notification to the new member
+        project = Projects.get_project(project_id)
+        user = Users.get_user(member.user_id)
+        project_url = f"/projects/{project_id}"
+
+        EmailService.notify_project_assignment(
+            user.username,
+            project.name,
+            project_url
+        )
+
+        return added_member
 
     async def remove_project_member(
         self,
