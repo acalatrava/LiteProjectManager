@@ -111,7 +111,9 @@ class TasksEndpoint(BaseEndpoint):
         if task.status == "completed" and current_task.status != "completed":
             project = Projects.get_project(current_task.project_id)
             project_members = Projects.get_project_members(current_task.project_id)
-            member_emails = [member.username for member in project_members]
+            member_ids = [member.user_id for member in project_members]
+            member_users = [Users.get_user_by_id(member_id) for member_id in member_ids]
+            member_emails = [user.username for user in member_users]
 
             # Notify about task completion
             EmailService.notify_task_completed(

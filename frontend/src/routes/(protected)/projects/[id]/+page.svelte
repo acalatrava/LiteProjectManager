@@ -137,6 +137,19 @@
         }
     }
 
+    async function handleDeleteTask(taskId: string) {
+        if (!confirm($_("common.confirmDelete"))) return;
+
+        error = "";
+        try {
+            await api.deleteTask(taskId);
+            tasks = tasks.filter((t) => t.id !== taskId);
+        } catch (err) {
+            error = $_("projects.errors.deleteFailed");
+            console.error(err);
+        }
+    }
+
     async function handleAddMember() {
         error = "";
         try {
@@ -408,6 +421,9 @@
                                 >
                                     {$_("common.taskAssignTo")}
                                 </th>
+                                <th scope="col" class="relative px-6 py-3">
+                                    <span class="sr-only">Actions</span>
+                                </th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
@@ -470,6 +486,17 @@
                                                 </option>
                                             {/each}
                                         </select>
+                                    </td>
+                                    <td
+                                        class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+                                    >
+                                        <button
+                                            on:click={() =>
+                                                handleDeleteTask(task.id)}
+                                            class="text-red-600 hover:text-red-900"
+                                        >
+                                            {$_("common.remove")}
+                                        </button>
                                     </td>
                                 </tr>
                             {/each}
