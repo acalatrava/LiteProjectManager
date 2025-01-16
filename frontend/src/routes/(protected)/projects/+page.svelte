@@ -205,7 +205,7 @@
                                                     </div>
                                                 </a>
                                                 <div
-                                                    class="text-sm text-gray-500"
+                                                    class="text-sm text-gray-500 max-w-xs truncate"
                                                 >
                                                     {project.description}
                                                 </div>
