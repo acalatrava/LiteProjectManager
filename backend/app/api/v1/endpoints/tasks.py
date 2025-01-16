@@ -59,7 +59,7 @@ class TasksEndpoint(BaseEndpoint):
 
         # Send email if task is assigned to someone
         if created_task.assigned_to_id:
-            assigned_user = Users.get_user(created_task.assigned_to_id)
+            assigned_user = Users.get_user_by_id(created_task.assigned_to_id)
             project = Projects.get_project(created_task.project_id)
             task_url = f"/projects/{created_task.project_id}/tasks/{created_task.id}"
             EmailService.notify_task_assignment(
@@ -96,7 +96,7 @@ class TasksEndpoint(BaseEndpoint):
 
         # Handle task assignment notification
         if task.assigned_to_id and task.assigned_to_id != current_task.assigned_to_id:
-            assigned_user = Users.get_user(task.assigned_to_id)
+            assigned_user = Users.get_user_by_id(task.assigned_to_id)
             project = Projects.get_project(current_task.project_id)
             task_url = f"/projects/{current_task.project_id}/tasks/{task_id}"
             EmailService.notify_task_assignment(
