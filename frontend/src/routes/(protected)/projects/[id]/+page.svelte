@@ -413,7 +413,7 @@
                         <tbody class="bg-white divide-y divide-gray-200">
                             {#each tasks as task}
                                 <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-6 py-4">
                                         <div
                                             class="text-sm font-medium text-gray-900"
                                         >
