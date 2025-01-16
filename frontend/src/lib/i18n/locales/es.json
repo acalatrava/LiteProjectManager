@@ -15,7 +15,7 @@
         "appName": "Lite Project Manager",
         "allRightsReserved": "Todos los derechos reservados.",
         "projects": "Proyectos",
-        "back": "Volver a Proyectos",
+        "back": "Volver",
         "timeline": "Línea de Tiempo del Proyecto",
         "tasks": "Tareas",
         "addTask": "Añadir Tarea",
@@ -195,6 +195,24 @@
             "title2": "Comience a gestionar sus proyectos hoy.",
             "description": "Únase a los equipos que confían en Lite Project Manager para entregar sus proyectos con éxito.",
             "button": "Regístrese gratis"
+        }
+    },
+    "projects": {
+        "description": "Una lista de todos los proyectos incluyendo su nombre, estado y otros detalles.",
+        "createProject": "Crear Proyecto",
+        "confirmDelete": "¿Está seguro de que desea eliminar este proyecto?",
+        "fields": {
+            "name": "Nombre",
+            "description": "Descripción",
+            "status": "Estado",
+            "startDate": "Fecha de Inicio",
+            "deadline": "Fecha Límite"
+        },
+        "errors": {
+            "loadFailed": "Error al cargar los proyectos",
+            "createFailed": "Error al crear el proyecto",
+            "deleteFailed": "Error al eliminar el proyecto",
+            "updateFailed": "Error al actualizar el proyecto"
         }
     }
 }

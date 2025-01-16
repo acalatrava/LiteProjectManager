@@ -259,6 +259,11 @@
         </div>
     </div>
 {:else if project}
+    <div class="mb-6">
+        <a href="/projects" class="text-primary-600 hover:text-primary-900"
+            >← {$_("common.back")}</a
+        >
+    </div>
     <div class="bg-white shadow overflow-hidden sm:rounded-lg">
         <div class="px-4 py-5 sm:px-6">
             <div class="flex justify-between items-center">
@@ -689,19 +694,19 @@
                             </div>
                         </div>
                     </div>
-                    <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3">
-                        <button
-                            type="submit"
-                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:col-start-2 sm:text-sm"
-                        >
-                            {$_("common.create")}
-                        </button>
+                    <div class="mt-5 sm:mt-6 grid grid-cols-2 gap-3">
                         <button
                             type="button"
-                            on:click={() => (showCreateTaskModal = false)}
-                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:col-start-1 sm:text-sm"
+                            on:click={() => (showCreateModal = false)}
+                            class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:text-sm"
                         >
                             {$_("common.cancel")}
+                        </button>
+                        <button
+                            type="submit"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:text-sm"
+                        >
+                            {$_("common.create")}
                         </button>
                     </div>
                 </form>

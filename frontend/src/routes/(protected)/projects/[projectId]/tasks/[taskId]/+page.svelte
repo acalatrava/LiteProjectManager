@@ -122,7 +122,7 @@
             <a
                 href="/projects/{projectId}"
                 class="text-primary-600 hover:text-primary-900"
-                >← Back to Project</a
+                >← {$_("common.back")}</a
             >
         </div>
 
