@@ -162,13 +162,13 @@
                                             scope="col"
                                             class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
                                         >
-                                            {$_("projects.fields.description")}
+                                            {$_("projects.fields.status")}
                                         </th>
                                         <th
                                             scope="col"
                                             class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
                                         >
-                                            {$_("projects.fields.status")}
+                                            {$_("projects.fields.startDate")}
                                         </th>
                                         <th
                                             scope="col"
