@@ -5,6 +5,12 @@ import type { Project, ProjectCreate, ProjectMember, Task, TaskCreate, GanttTask
 
 const API_URL = import.meta.env.VITE_API_URL || env.PUBLIC_API_URL;
 
+interface UserCreate {
+    email: string;
+    full_name: string;
+    role?: string;
+}
+
 class ApiService {
     private getHeaders(includeAuth = true): HeadersInit {
         const headers: HeadersInit = {
@@ -381,6 +387,20 @@ class ApiService {
 
         if (!response.ok) {
             throw new Error('Failed to get task');
+        }
+
+        return response.json();
+    }
+
+    async createUser(userData: UserCreate): Promise<User> {
+        const response = await fetch(`${API_URL}/api/v1/users/`, {
+            method: 'POST',
+            headers: this.getHeaders(),
+            body: JSON.stringify(userData),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to create user');
         }
 
         return response.json();

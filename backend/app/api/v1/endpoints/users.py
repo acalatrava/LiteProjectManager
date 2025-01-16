@@ -2,9 +2,12 @@ from fastapi import Path, Query, Body, HTTPException, status, Depends
 from typing import List, Optional
 from app.core.endpoints.endpoint import BaseEndpoint
 from app.schemas.base import DefaultResponse
-from app.schemas.users import UserInDB, UserUpdate, UserRole
+from app.schemas.users import UserInDB, UserUpdate, UserRole, UserCreate
 from app.db.relational import Users
 from app.services.authentication import admin_user_check, user_check
+import random
+import string
+from app.services.email_service import EmailService
 
 
 class UsersEndpoint(BaseEndpoint):
@@ -42,6 +45,14 @@ class UsersEndpoint(BaseEndpoint):
             summary="Delete user",
             description="Admin only: Delete a user"
         )(self.delete_user)
+
+        # Create new user
+        self.router.post(
+            "/",
+            response_model=UserInDB,
+            summary="Create new user",
+            description="Admin only: Create a new user"
+        )(self.create_user)
 
     async def get_users(
         self,
@@ -144,3 +155,51 @@ class UsersEndpoint(BaseEndpoint):
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Error deleting user"
             )
+
+    def generate_random_password(self, length=8):
+        """Generate a random password with letters and numbers"""
+        characters = string.ascii_letters + string.digits
+        return ''.join(random.choice(characters) for _ in range(length))
+
+    async def create_user(
+        self,
+        user_data: UserCreate = Body(...),
+        admin=Depends(admin_user_check)
+    ) -> UserInDB:
+        """
+        Create a new user (Admin only)
+        """
+        # Check if email already exists
+        if Users.get_user_by_email(user_data.email):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
+
+        # Generate random password
+        password = self.generate_random_password()
+
+        # Create user with the generated password
+        new_user = Users.insert_new_user(
+            username=user_data.email,
+            password=password,
+            role=user_data.role,
+            name=user_data.full_name
+        )
+        if not new_user:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Error creating user"
+            )
+
+        # Send email with credentials
+        try:
+            EmailService.send_new_user_credentials(
+                username=new_user.username,
+                password=password
+            )
+        except Exception as e:
+            # Log the error but don't fail the request
+            print(f"Error sending email: {str(e)}")
+
+        return new_user

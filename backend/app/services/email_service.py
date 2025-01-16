@@ -81,3 +81,20 @@ class EmailService:
         <p>Congratulations to all team members!</p>
         """
         return EmailService.send_email(user_emails, subject, html_content)
+
+    @staticmethod
+    def send_new_user_credentials(username: str, password: str) -> bool:
+        """Send welcome email to new user with their credentials"""
+        subject = "Welcome to Project Manager - Your Account Details"
+        html_content = f"""
+        <h2>Welcome to Project Manager</h2>
+        <p>Your account has been created in the Project Manager system.</p>
+        <p>Your login credentials are:</p>
+        <ul>
+            <li><strong>Username:</strong> {username}</li>
+            <li><strong>Password:</strong> {password}</li>
+        </ul>
+        <p>Please change your password after your first login.</p>
+        <p>Best regards,<br>Project Manager Team</p>
+        """
+        return EmailService.send_email([username], subject, html_content)

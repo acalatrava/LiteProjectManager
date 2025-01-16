@@ -242,6 +242,14 @@ class UsersTable:
             print(f"Error creating auth token: {e}")
             return None
 
+    def get_user_by_email(self, email: str) -> Optional[UserInDB]:
+        """Get a user by their email address"""
+        try:
+            user = User.get(User.username == email)
+            return UserInDB.model_validate(user)
+        except User.DoesNotExist:
+            return None
+
 
 class ProjectsTable:
     def __init__(self):

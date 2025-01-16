@@ -18,8 +18,10 @@ class UserBase(BaseModel):
     is_active: bool = True
 
 
-class UserCreate(UserBase):
-    password: constr(min_length=8)
+class UserCreate(BaseModel):
+    email: EmailStr
+    full_name: str
+    role: UserRole = UserRole.USER
 
 
 class UserUpdate(BaseModel):
@@ -56,5 +58,5 @@ class TokenData(BaseModel):
 
 
 # This is the Pydantic model for the user registration form
-class RegisterUserModel(UserCreate):
-    pass
+class RegisterUserModel(UserBase):
+    password: constr(min_length=8)

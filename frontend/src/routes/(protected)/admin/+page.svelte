@@ -11,6 +11,12 @@
     let selectedUser: User | null = null;
     let showDeleteModal = false;
     let showEditModal = false;
+    let showCreateModal = false;
+    let newUser = {
+        email: "",
+        full_name: "",
+        role: UserRole.USER,
+    };
 
     onMount(async () => {
         await loadUsers();
@@ -83,6 +89,25 @@
             console.error(err);
         }
     }
+
+    async function handleCreateUser(event: Event) {
+        event.preventDefault();
+        error = "";
+
+        try {
+            await api.createUser(newUser);
+            users = await api.getUsers();
+            showCreateModal = false;
+            newUser = {
+                email: "",
+                full_name: "",
+                role: UserRole.USER,
+            };
+        } catch (err) {
+            error = "admin.errors.createFailed";
+            console.error(err);
+        }
+    }
 </script>
 
 <div class="py-6">
@@ -95,6 +120,15 @@
                 <p class="mt-2 text-sm text-gray-700">
                     {$_("admin.userList.description")}
                 </p>
+            </div>
+            <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+                <button
+                    type="button"
+                    on:click={() => (showCreateModal = true)}
+                    class="inline-flex items-center justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 sm:w-auto"
+                >
+                    {$_("admin.userList.actions.create")}
+                </button>
             </div>
         </div>
 
@@ -472,6 +506,139 @@
                             class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:col-start-1 sm:text-sm"
                         >
                             {$_("admin.editModal.cancel")}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{/if}
+
+<!-- Create User Modal -->
+{#if showCreateModal}
+    <div
+        class="fixed z-10 inset-0 overflow-y-auto"
+        aria-labelledby="modal-title"
+        role="dialog"
+        aria-modal="true"
+    >
+        <div
+            class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
+        >
+            <div
+                class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+                aria-hidden="true"
+            ></div>
+            <span
+                class="hidden sm:inline-block sm:align-middle sm:h-screen"
+                aria-hidden="true">&#8203;</span
+            >
+            <div
+                class="relative inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6"
+            >
+                <form on:submit={handleCreateUser}>
+                    <div>
+                        <h3
+                            class="text-lg leading-6 font-medium text-gray-900"
+                            id="modal-title"
+                        >
+                            {$_("admin.createModal.title")}
+                        </h3>
+                        <div
+                            class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6"
+                        >
+                            <div class="sm:col-span-4">
+                                <label
+                                    for="email"
+                                    class="block text-sm font-medium text-gray-700"
+                                    >{$_(
+                                        "admin.createModal.fields.email",
+                                    )}</label
+                                >
+                                <div class="mt-1">
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        id="email"
+                                        required
+                                        bind:value={newUser.email}
+                                        class="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                    />
+                                </div>
+                            </div>
+
+                            <div class="sm:col-span-4">
+                                <label
+                                    for="full_name"
+                                    class="block text-sm font-medium text-gray-700"
+                                    >{$_(
+                                        "admin.createModal.fields.fullName",
+                                    )}</label
+                                >
+                                <div class="mt-1">
+                                    <input
+                                        type="text"
+                                        name="full_name"
+                                        id="full_name"
+                                        required
+                                        bind:value={newUser.full_name}
+                                        class="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                    />
+                                </div>
+                            </div>
+
+                            <div class="sm:col-span-4">
+                                <label
+                                    for="role"
+                                    class="block text-sm font-medium text-gray-700"
+                                    >{$_(
+                                        "admin.createModal.fields.role",
+                                    )}</label
+                                >
+                                <div class="mt-1">
+                                    <select
+                                        id="role"
+                                        name="role"
+                                        bind:value={newUser.role}
+                                        class="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                    >
+                                        <option value={UserRole.USER}
+                                            >{$_(
+                                                "admin.userList.roles.user",
+                                            )}</option
+                                        >
+                                        <option value={UserRole.ADMIN}
+                                            >{$_(
+                                                "admin.userList.roles.admin",
+                                            )}</option
+                                        >
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div
+                        class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense"
+                    >
+                        <button
+                            type="submit"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:col-start-2 sm:text-sm"
+                        >
+                            {$_("admin.createModal.create")}
+                        </button>
+                        <button
+                            type="button"
+                            on:click={() => {
+                                showCreateModal = false;
+                                newUser = {
+                                    email: "",
+                                    full_name: "",
+                                    role: UserRole.USER,
+                                };
+                            }}
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:col-start-1 sm:text-sm"
+                        >
+                            {$_("admin.createModal.cancel")}
                         </button>
                     </div>
                 </form>

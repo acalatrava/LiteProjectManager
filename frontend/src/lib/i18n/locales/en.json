@@ -107,7 +107,8 @@
             },
             "actions": {
                 "edit": "Edit",
-                "delete": "Delete"
+                "delete": "Delete",
+                "create": "Create User"
             }
         },
         "deleteModal": {
@@ -125,11 +126,22 @@
             "save": "Save",
             "cancel": "Cancel"
         },
+        "createModal": {
+            "title": "Create New User",
+            "fields": {
+                "email": "Email",
+                "fullName": "Full Name",
+                "role": "Role"
+            },
+            "create": "Create User",
+            "cancel": "Cancel"
+        },
         "errors": {
             "loadFailed": "Failed to load users",
             "updateFailed": "Failed to update user",
             "deleteFailed": "Failed to delete user",
-            "updateRoleFailed": "Failed to update user role"
+            "updateRoleFailed": "Failed to update user role",
+            "createFailed": "Failed to create user"
         }
     },
     "profile": {
