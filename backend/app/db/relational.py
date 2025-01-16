@@ -455,6 +455,7 @@ class TasksTable:
         task_id = str(uuid.uuid4())
         task_db = TaskModel.create(
             id=task_id,
+            parent_task_id=task.parent_task_id,
             project_id=task.project_id,
             name=task.name,
             description=task.description,
@@ -476,13 +477,24 @@ class TasksTable:
             "created_by_id": task_db.created_by_id,
             "status": task_db.status,
             "created_at": task_db.created_at,
-            "updated_at": task_db.updated_at
+            "updated_at": task_db.updated_at,
+            "parent_task_id": task_db.parent_task_id.id if task_db.parent_task_id else None,
+            "subtasks": []
         })
 
     def update_task(self, task_id: str, task_update: TaskUpdate) -> Optional[TaskSchema]:
         try:
             task = TaskModel.get(TaskModel.id == task_id)
             update_data = task_update.model_dump(exclude_unset=True)
+
+            # Check if trying to set status to completed
+            if update_data.get('status') == 'completed':
+                # Check if all subtasks are completed
+                incomplete_subtasks = task.get_subtasks().where(
+                    TaskModel.status != 'completed'
+                ).count()
+                if incomplete_subtasks > 0:
+                    raise ValueError("Cannot complete task: there are incomplete subtasks")
 
             for field, value in update_data.items():
                 setattr(task, field, value)
@@ -500,7 +512,14 @@ class TasksTable:
                 "created_by_id": task.created_by_id,
                 "status": task.status,
                 "created_at": task.created_at,
-                "updated_at": task.updated_at
+                "updated_at": task.updated_at,
+                "parent_task_id": task.parent_task_id.id if task.parent_task_id else None,
+                "subtasks": [
+                    {
+                        **st.to_dict(),
+                        "parent_task_id": st.parent_task_id.id if st.parent_task_id else None
+                    } for st in task.get_subtasks()
+                ]
             })
         except TaskModel.DoesNotExist:
             return None
@@ -515,7 +534,7 @@ class TasksTable:
     def get_task(self, task_id: str) -> Optional[TaskSchema]:
         try:
             task = TaskModel.get(TaskModel.id == task_id)
-            return TaskSchema.model_validate({
+            task_dict = {
                 "id": task.id,
                 "name": task.name,
                 "description": task.description,
@@ -526,8 +545,18 @@ class TasksTable:
                 "created_by_id": task.created_by_id,
                 "status": task.status,
                 "created_at": task.created_at,
-                "updated_at": task.updated_at
-            })
+                "updated_at": task.updated_at,
+                "parent_task_id": task.parent_task_id.id if task.parent_task_id else None
+            }
+            subtasks = [
+                TaskSchema.model_validate({
+                    **st.to_dict(),
+                    "parent_task_id": st.parent_task_id.id if st.parent_task_id else None
+                })
+                for st in task.get_subtasks()
+            ]
+            task_dict["subtasks"] = subtasks
+            return TaskSchema.model_validate(task_dict)
         except TaskModel.DoesNotExist:
             return None
 
@@ -548,7 +577,8 @@ class TasksTable:
                 "created_by_id": task.created_by_id,
                 "status": task.status,
                 "created_at": task.created_at,
-                "updated_at": task.updated_at
+                "updated_at": task.updated_at,
+                "parent_task_id": task.parent_task_id.id if task.parent_task_id else None
             })
         except TaskModel.DoesNotExist:
             return None
@@ -557,6 +587,7 @@ class TasksTable:
         return [
             TaskSchema.model_validate({
                 "id": t.id,
+                "parent_task_id": t.parent_task_id.id if t.parent_task_id else None,
                 "name": t.name,
                 "description": t.description,
                 "project_id": t.project_id,
@@ -566,7 +597,13 @@ class TasksTable:
                 "created_by_id": t.created_by_id,
                 "status": t.status,
                 "created_at": t.created_at,
-                "updated_at": t.updated_at
+                "updated_at": t.updated_at,
+                "subtasks": [
+                    {
+                        **st.to_dict(),
+                        "parent_task_id": st.parent_task_id.id if st.parent_task_id else None
+                    } for st in t.get_subtasks()
+                ]
             })
             for t in TaskModel.select().where(TaskModel.project_id == project_id)
         ]
@@ -584,7 +621,9 @@ class TasksTable:
                 "created_by_id": t.created_by_id,
                 "status": t.status,
                 "created_at": t.created_at,
-                "updated_at": t.updated_at
+                "updated_at": t.updated_at,
+                "parent_task_id": t.parent_task_id.id if t.parent_task_id else None,
+                "subtasks": []
             })
             for t in TaskModel.select().where(
                 (TaskModel.assigned_to_id == user_id) |
@@ -606,9 +645,19 @@ class TasksTable:
                 "created_by_id": t.created_by_id,
                 "status": t.status,
                 "created_at": t.created_at,
-                "updated_at": t.updated_at
+                "updated_at": t.updated_at,
+                "parent_task_id": t.parent_task_id.id if t.parent_task_id else None,
+                "subtasks": [
+                    {
+                        **st.to_dict(),
+                        "parent_task_id": st.parent_task_id.id if st.parent_task_id else None
+                    } for st in t.get_subtasks()
+                ]
             })
-            for t in TaskModel.select().where(TaskModel.project_id == project_id)
+            for t in TaskModel.select().where(
+                (TaskModel.project_id == project_id) &
+                (TaskModel.parent_task_id.is_null())  # Only get top-level tasks
+            )
         ]
 
 

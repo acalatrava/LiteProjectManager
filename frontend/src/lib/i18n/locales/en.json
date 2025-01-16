@@ -32,6 +32,9 @@
         "taskUnassigned": "Unassigned",
         "create": "Create",
         "remove": "Remove",
+        "subtasks": "Subtasks",
+        "addSubtask": "Add Subtask",
+        "noSubtasks": "No subtasks yet.",
         "confirmRemoveMember": "Are you sure you want to remove this member?",
         "projectManager": "Project Manager",
         "projectMember": "Project Member",
@@ -225,8 +228,9 @@
         "errors": {
             "loadFailed": "Failed to load projects",
             "createFailed": "Failed to create project",
-            "deleteFailed": "Failed to delete project",
-            "updateFailed": "Failed to update project"
+            "updateFailed": "Failed to update project",
+            "deleteFailed": "Failed to delete task",
+            "memberAddFailed": "Failed to add member"
         }
     }
 }

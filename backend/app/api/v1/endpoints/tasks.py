@@ -44,21 +44,21 @@ class TasksEndpoint(BaseEndpoint):
 
     async def create_task(
         self,
-        task: TaskCreate = Body(...),
+        task: TaskCreate,
         userinfo=Depends(user_check)
     ) -> Task:
-        # Check if user has project manager role
-        if not Projects.is_project_manager(userinfo.id, task.project_id):
+        if not Projects.user_has_access(userinfo.id, task.project_id):
             raise HTTPException(
                 status_code=403,
-                detail="Only project managers can create tasks"
+                detail="No access to this project"
             )
 
-        Projects.update_project_status(task.project_id, "in_progress")
+        try:
+            created_task = Tasks.create_task(task, created_by=userinfo.id)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
 
-        created_task = Tasks.create_task(task, created_by=userinfo.id)
-
-        # Send email if task is assigned to someone
+        # Send email notification if task is assigned
         if created_task.assigned_to_id:
             assigned_user = Users.get_user_by_id(created_task.assigned_to_id)
             project = Projects.get_project(created_task.project_id)
@@ -78,57 +78,21 @@ class TasksEndpoint(BaseEndpoint):
         task: TaskUpdate = Body(...),
         userinfo=Depends(user_check)
     ) -> Task:
-        if userinfo.is_admin:
-            current_task = Tasks.get_task(task_id)
-        else:
-            current_task = Tasks.get_user_task(userinfo.id, task_id)
+        current_task = Tasks.get_task(task_id)
         if not current_task:
             raise HTTPException(status_code=404, detail="Task not found")
 
-        # Check permissions
         if not (userinfo.is_admin or
                 Projects.is_project_manager(userinfo.id, current_task.project_id) or
                 current_task.assigned_to_id == userinfo.id):
             raise HTTPException(status_code=403, detail="Not enough permissions")
 
-        updated = Tasks.update_task(task_id, task)
-        if not updated:
-            raise HTTPException(status_code=404, detail="Task not found")
-
-        # Handle task assignment notification
-        if task.assigned_to_id and task.assigned_to_id != current_task.assigned_to_id:
-            assigned_user = Users.get_user_by_id(task.assigned_to_id)
-            project = Projects.get_project(current_task.project_id)
-            task_url = f"{SERVER_URL}/projects/{current_task.project_id}/tasks/{task_id}"
-            EmailService.notify_task_assignment(
-                assigned_user.username,
-                updated.name,
-                project.name,
-                task_url
-            )
-
-        # Handle task completion notification
-        if task.status == "completed" and current_task.status != "completed":
-            project = Projects.get_project(current_task.project_id)
-            project_members = Projects.get_project_members(current_task.project_id)
-            member_ids = [member.user_id for member in project_members]
-            member_users = [Users.get_user_by_id(member_id) for member_id in member_ids]
-            member_emails = [user.username for user in member_users]
-
-            # Notify about task completion
-            EmailService.notify_task_completed(
-                member_emails,
-                updated.name,
-                project.name,
-                userinfo.name or userinfo.username
-            )
-
-            # Check if all tasks are completed
-            project_tasks = Tasks.get_project_tasks(current_task.project_id)
-            if all(t.status == "completed" for t in project_tasks):
-                Projects.update_project_status(current_task.project_id, "completed")
-                # Notify about project completion
-                EmailService.notify_project_completed(member_emails, project.name)
+        try:
+            updated = Tasks.update_task(task_id, task)
+            if not updated:
+                raise HTTPException(status_code=404, detail="Task not found")
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
 
         return updated
 

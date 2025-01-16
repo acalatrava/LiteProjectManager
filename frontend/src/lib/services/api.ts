@@ -11,6 +11,16 @@ interface UserCreate {
     role?: string;
 }
 
+interface TaskCreate {
+    name: string;
+    description: string;
+    project_id: string;
+    start_date: string;
+    deadline: string;
+    assigned_to_id?: string | null;
+    parent_task_id?: string | null;
+}
+
 class ApiService {
     private getHeaders(includeAuth = true): HeadersInit {
         const headers: HeadersInit = {
@@ -404,6 +414,13 @@ class ApiService {
         }
 
         return response.json();
+    }
+
+    async createSubtask(parentTaskId: string, task: Omit<TaskCreate, 'parent_task_id'>): Promise<Task> {
+        return this.createTask({
+            ...task,
+            parent_task_id: parentTaskId
+        });
     }
 }
 

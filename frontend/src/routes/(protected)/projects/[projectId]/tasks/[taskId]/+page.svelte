@@ -1,5 +1,6 @@
 <script lang="ts">
     import { page } from "$app/stores";
+    import { goto } from "$app/navigation";
     import { onMount } from "svelte";
     import { api } from "$lib/services/api";
     import type { Task, Comment, User } from "$lib/types/project";
@@ -15,6 +16,16 @@
     let error = "";
     let newComment = "";
     let showStatusMenu = false;
+    let showCreateSubtaskModal = false;
+    let newSubtask = {
+        name: "",
+        description: "",
+        start_date: new Date().toISOString().split("T")[0],
+        deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split("T")[0],
+        assigned_to_id: "",
+    };
 
     onMount(async () => {
         await loadTaskData();
@@ -86,6 +97,50 @@
                 return "bg-gray-100 text-gray-800";
         }
     }
+
+    async function handleDeleteTask(taskId: string) {
+        if (!confirm($_("common.confirmDelete"))) return;
+
+        error = "";
+        try {
+            await api.deleteTask(taskId);
+            // Refresh task data to update subtasks list
+            await loadTaskData();
+        } catch (err) {
+            error = $_("projects.errors.deleteFailed");
+            console.error(err);
+        }
+    }
+
+    async function handleCreateSubtask() {
+        if (!task) return;
+
+        error = "";
+        try {
+            const taskData = {
+                ...newSubtask,
+                project_id: projectId,
+            };
+
+            await api.createSubtask(taskId, taskData);
+            showCreateSubtaskModal = false;
+            await loadTaskData();
+
+            // Reset form
+            newSubtask = {
+                name: "",
+                description: "",
+                start_date: new Date().toISOString().split("T")[0],
+                deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+                    .toISOString()
+                    .split("T")[0],
+                assigned_to_id: "",
+            };
+        } catch (err) {
+            error = $_("projects.errors.createFailed");
+            console.error(err);
+        }
+    }
 </script>
 
 {#if loading}
@@ -119,11 +174,16 @@
 {:else if task}
     <div class="max-w-4xl mx-auto py-6">
         <div class="mb-6">
-            <a
-                href="/projects/{projectId}"
-                class="text-primary-600 hover:text-primary-900"
-                >← {$_("common.back")}</a
+            <button
+                on:click={() => {
+                    window.location.href = task.parent_task_id
+                        ? `/projects/${projectId}/tasks/${task.parent_task_id}`
+                        : `/projects/${projectId}`;
+                }}
+                class="text-primary-600 hover:text-primary-900 text-left"
             >
+                ← {$_("common.back")}
+            </button>
         </div>
 
         <div class="bg-white shadow overflow-hidden sm:rounded-lg">
@@ -262,6 +322,267 @@
                         </form>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Subtasks Section -->
+        <div class="mt-8">
+            <div class="sm:flex sm:items-center">
+                <div class="sm:flex-auto">
+                    <h2 class="text-xl font-semibold text-gray-900">
+                        {$_("common.subtasks")}
+                    </h2>
+                </div>
+                <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+                    <button
+                        type="button"
+                        class="block rounded-md bg-primary-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
+                        on:click={() => (showCreateSubtaskModal = true)}
+                    >
+                        {$_("common.addSubtask")}
+                    </button>
+                </div>
+            </div>
+
+            {#if task.subtasks?.length}
+                <div class="mt-4">
+                    <div
+                        class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg"
+                    >
+                        <table class="min-w-full divide-y divide-gray-300">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th
+                                        scope="col"
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    >
+                                        {$_("common.taskName")}
+                                    </th>
+                                    <th
+                                        scope="col"
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    >
+                                        {$_("projects.fields.status")}
+                                    </th>
+                                    <th
+                                        scope="col"
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                    >
+                                        {$_("projects.fields.deadline")}
+                                    </th>
+                                    <th scope="col" class="relative px-6 py-3">
+                                        <span class="sr-only"
+                                            >{$_("common.actions")}</span
+                                        >
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 bg-white">
+                                {#each task.subtasks as subtask}
+                                    <tr>
+                                        <td
+                                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                                        >
+                                            <button
+                                                on:click={async () => {
+                                                    window.location.href = `/projects/${projectId}/tasks/${subtask.id}`;
+                                                }}
+                                                class="text-primary-600 hover:text-primary-900 text-left"
+                                            >
+                                                {subtask.name}
+                                            </button>
+                                        </td>
+                                        <td
+                                            class="px-6 py-4 whitespace-nowrap text-sm"
+                                        >
+                                            <span
+                                                class="inline-flex rounded-full px-2 text-xs font-semibold leading-5 {getStatusColor(
+                                                    subtask.status,
+                                                )}"
+                                            >
+                                                {subtask.status}
+                                            </span>
+                                        </td>
+                                        <td
+                                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                                        >
+                                            {new Date(
+                                                subtask.deadline,
+                                            ).toLocaleDateString()}
+                                        </td>
+                                        <td
+                                            class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+                                        >
+                                            <button
+                                                on:click={() =>
+                                                    handleDeleteTask(
+                                                        subtask.id,
+                                                    )}
+                                                class="text-red-600 hover:text-red-900"
+                                            >
+                                                {$_("common.remove")}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                {/each}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            {:else}
+                <p class="mt-4 text-gray-500">{$_("common.noSubtasks")}</p>
+            {/if}
+        </div>
+    </div>
+{/if}
+
+<!-- Create Subtask Modal -->
+{#if showCreateSubtaskModal}
+    <div
+        class="fixed z-10 inset-0 overflow-y-auto"
+        aria-labelledby="modal-title"
+        role="dialog"
+        aria-modal="true"
+    >
+        <div
+            class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
+        >
+            <!-- Background overlay -->
+            <div
+                class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+                aria-hidden="true"
+                on:click={() => (showCreateSubtaskModal = false)}
+            />
+
+            <!-- Modal panel -->
+            <div
+                class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6"
+            >
+                <form on:submit|preventDefault={handleCreateSubtask}>
+                    <div>
+                        <h3
+                            class="text-lg leading-6 font-medium text-gray-900"
+                            id="modal-title"
+                        >
+                            {$_("common.addSubtask")}
+                        </h3>
+
+                        <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4">
+                            <div>
+                                <label
+                                    for="name"
+                                    class="block text-sm font-medium text-gray-700"
+                                >
+                                    {$_("common.taskName")}
+                                </label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    id="name"
+                                    required
+                                    bind:value={newSubtask.name}
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                                />
+                            </div>
+
+                            <div>
+                                <label
+                                    for="description"
+                                    class="block text-sm font-medium text-gray-700"
+                                >
+                                    {$_("common.taskDescription")}
+                                </label>
+                                <textarea
+                                    id="description"
+                                    name="description"
+                                    rows="3"
+                                    bind:value={newSubtask.description}
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                                />
+                            </div>
+
+                            <div
+                                class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2"
+                            >
+                                <div>
+                                    <label
+                                        for="start_date"
+                                        class="block text-sm font-medium text-gray-700"
+                                    >
+                                        {$_("common.taskStartDate")}
+                                    </label>
+                                    <input
+                                        type="date"
+                                        name="start_date"
+                                        id="start_date"
+                                        required
+                                        bind:value={newSubtask.start_date}
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label
+                                        for="deadline"
+                                        class="block text-sm font-medium text-gray-700"
+                                    >
+                                        {$_("common.taskDeadline")}
+                                    </label>
+                                    <input
+                                        type="date"
+                                        name="deadline"
+                                        id="deadline"
+                                        required
+                                        bind:value={newSubtask.deadline}
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label
+                                    for="assigned_to"
+                                    class="block text-sm font-medium text-gray-700"
+                                >
+                                    {$_("common.taskAssignTo")}
+                                </label>
+                                <select
+                                    id="assigned_to"
+                                    name="assigned_to"
+                                    bind:value={newSubtask.assigned_to_id}
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                                >
+                                    <option value="">
+                                        {$_("common.taskUnassigned")}
+                                    </option>
+                                    {#each users as user}
+                                        <option value={user.id}>
+                                            {user.name || user.username}
+                                        </option>
+                                    {/each}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense"
+                    >
+                        <button
+                            type="submit"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:col-start-2 sm:text-sm"
+                        >
+                            {$_("common.create")}
+                        </button>
+                        <button
+                            type="button"
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:col-start-1 sm:text-sm"
+                            on:click={() => (showCreateSubtaskModal = false)}
+                        >
+                            {$_("common.cancel")}
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

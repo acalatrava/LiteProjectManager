@@ -32,6 +32,9 @@
         "taskUnassigned": "Sin asignar",
         "create": "Crear",
         "remove": "Eliminar",
+        "subtasks": "Subtareas",
+        "addSubtask": "Añadir Subtarea",
+        "noSubtasks": "No hay subtareas aún.",
         "confirmRemoveMember": "¿Está seguro de que desea eliminar este miembro?",
         "projectManager": "Gerente de Proyecto",
         "projectMember": "Miembro del Proyecto",
@@ -213,8 +216,9 @@
         "errors": {
             "loadFailed": "Error al cargar los proyectos",
             "createFailed": "Error al crear el proyecto",
-            "deleteFailed": "Error al eliminar el proyecto",
-            "updateFailed": "Error al actualizar el proyecto"
+            "updateFailed": "Error al actualizar el proyecto",
+            "deleteFailed": "Error al eliminar la tarea",
+            "memberAddFailed": "Error al añadir miembro"
         }
     }
 }

@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 
 class TaskBase(BaseModel):
@@ -13,6 +13,7 @@ class TaskBase(BaseModel):
 
 class TaskCreate(TaskBase):
     assigned_to_id: Optional[str] = None
+    parent_task_id: Optional[str] = None
 
 
 class TaskUpdate(BaseModel):
@@ -23,6 +24,7 @@ class TaskUpdate(BaseModel):
     deadline: Optional[datetime] = None
     status: Optional[str] = None
     assigned_to_id: Optional[str] = None
+    parent_task_id: Optional[str] = None
 
 
 class Task(TaskBase):
@@ -32,3 +34,5 @@ class Task(TaskBase):
     status: str
     created_at: datetime
     updated_at: datetime
+    parent_task_id: Optional[str]
+    subtasks: List['Task'] = []
