@@ -27,9 +27,10 @@
         error = "";
         try {
             users = await api.getUsers();
-        } catch (err) {
-            error = "admin.errors.loadFailed";
+        } catch (err: any) {
+            const errorMessage = err.message || $_("admin.errors.loadFailed");
             console.error(err);
+            alert(errorMessage);
         } finally {
             loading = false;
         }
@@ -40,9 +41,11 @@
         try {
             await api.updateUser(userId, { role: newRole });
             users = await api.getUsers();
-        } catch (err) {
-            error = "admin.errors.updateRoleFailed";
+        } catch (err: any) {
+            const errorMessage =
+                err.message || $_("admin.errors.updateRoleFailed");
             console.error(err);
+            alert(errorMessage);
         }
     }
 

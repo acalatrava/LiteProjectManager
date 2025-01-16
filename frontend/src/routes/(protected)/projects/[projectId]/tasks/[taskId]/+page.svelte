@@ -46,9 +46,10 @@
                 user: usersData.find((u) => u.id === comment.user_id),
             }));
             users = usersData;
-        } catch (err) {
-            error = "Failed to load task data";
+        } catch (err: any) {
+            const errorMessage = err.message || "Failed to load task data";
             console.error(err);
+            alert(errorMessage);
         } finally {
             loading = false;
         }
@@ -65,23 +66,28 @@
             });
             newComment = "";
             await loadTaskData();
-        } catch (err) {
-            error = "Failed to add comment";
+        } catch (err: any) {
+            const errorMessage = err.message || "Failed to add comment";
             console.error(err);
+            alert(errorMessage);
         }
     }
 
     async function handleStatusChange(
         newStatus: "pending" | "in_progress" | "completed",
     ) {
-        error = "";
         try {
             await api.updateTask(taskId, { status: newStatus });
             showStatusMenu = false;
             await loadTaskData();
-        } catch (err) {
-            error = "Failed to update task status";
+        } catch (err: any) {
+            let errorMessage = "Failed to update task status";
+            // dump err keys
+            if (err) {
+                errorMessage = err;
+            }
             console.error(err);
+            alert(errorMessage);
         }
     }
 
@@ -101,21 +107,26 @@
     async function handleDeleteTask(taskId: string) {
         if (!confirm($_("common.confirmDelete"))) return;
 
-        error = "";
         try {
             await api.deleteTask(taskId);
-            // Refresh task data to update subtasks list
             await loadTaskData();
-        } catch (err) {
-            error = $_("projects.errors.deleteFailed");
+        } catch (err: any) {
+            let errorMessage = $_("projects.errors.deleteFailed");
+            if (err.response?.data) {
+                const serverError =
+                    typeof err.response.data === "string"
+                        ? err.response.data
+                        : err.response.data.detail;
+                errorMessage = `${errorMessage}: ${serverError}`;
+            }
             console.error(err);
+            alert(errorMessage);
         }
     }
 
     async function handleCreateSubtask() {
         if (!task) return;
 
-        error = "";
         try {
             const taskData = {
                 ...newSubtask,
@@ -136,9 +147,17 @@
                     .split("T")[0],
                 assigned_to_id: "",
             };
-        } catch (err) {
-            error = $_("projects.errors.createFailed");
+        } catch (err: any) {
+            let errorMessage = $_("projects.errors.createFailed");
+            if (err.response?.data) {
+                const serverError =
+                    typeof err.response.data === "string"
+                        ? err.response.data
+                        : err.response.data.detail;
+                errorMessage = `${errorMessage}: ${serverError}`;
+            }
             console.error(err);
+            alert(errorMessage);
         }
     }
 </script>

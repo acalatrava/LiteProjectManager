@@ -11,7 +11,7 @@
     } from "$lib/types/project";
     import { _ } from "svelte-i18n";
 
-    const projectId = $page.params.id;
+    const projectId = $page.params.projectId;
     let project: Project | null = null;
     let tasks: Task[] = [];
     let ganttTasks: GanttTask[] = [];
@@ -345,9 +345,12 @@
                                 class="relative h-8 border-b flex items-center"
                             >
                                 <div
+                                    on:click={() => {
+                                        window.location.href = `/projects/${projectId}/tasks/${task.id}`;
+                                    }}
                                     class="absolute h-6 rounded {getTaskColor(
                                         task.progress,
-                                    )} border"
+                                    )} border cursor-pointer hover:opacity-75 transition-opacity"
                                     style="
                                         left: {getTaskOffset(
                                         task.start,

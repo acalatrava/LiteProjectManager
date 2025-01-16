@@ -37,6 +37,25 @@ class ApiService {
         return headers;
     }
 
+    private async handleResponse(response: Response) {
+        if (!response.ok) {
+            const contentType = response.headers.get('content-type');
+            let errorDetail;
+
+            if (contentType?.includes('application/json')) {
+                const errorData = await response.json();
+                errorDetail = errorData.detail || JSON.stringify(errorData);
+            } else {
+                errorDetail = await response.text();
+            }
+
+            const error = new Error(errorDetail);
+            error.response = response;
+            throw error;
+        }
+        return response;
+    }
+
     async login(email: string, password: string): Promise<AuthResponse> {
         const formData = new FormData();
         formData.append('username', email);
@@ -47,10 +66,7 @@ class ApiService {
             body: formData,
         });
 
-        if (!response.ok) {
-            throw new Error('Login failed');
-        }
-
+        await this.handleResponse(response);
         return response.json();
     }
 
@@ -63,10 +79,7 @@ class ApiService {
             body: JSON.stringify(data),
         });
 
-        if (!response.ok) {
-            throw new Error('Registration failed');
-        }
-
+        await this.handleResponse(response);
         return response.json();
     }
 
@@ -75,10 +88,7 @@ class ApiService {
             headers: this.getHeaders(),
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to get user info');
-        }
-
+        await this.handleResponse(response);
         return response.json();
     }
 
@@ -88,10 +98,7 @@ class ApiService {
             headers: this.getHeaders(),
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to get users');
-        }
-
+        await this.handleResponse(response);
         return response.json();
     }
 
@@ -191,10 +198,7 @@ class ApiService {
             headers: this.getHeaders(),
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to get projects');
-        }
-
+        await this.handleResponse(response);
         return response.json();
     }
 
@@ -205,10 +209,7 @@ class ApiService {
             body: JSON.stringify(project),
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to create project');
-        }
-
+        await this.handleResponse(response);
         return response.json();
     }
 
@@ -242,10 +243,7 @@ class ApiService {
             headers: this.getHeaders(),
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to get project members');
-        }
-
+        await this.handleResponse(response);
         return response.json();
     }
 
@@ -256,10 +254,7 @@ class ApiService {
             body: JSON.stringify({ user_id: userId, role, project_id: projectId }),
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to add project member');
-        }
-
+        await this.handleResponse(response);
         return response.json();
     }
 
@@ -269,9 +264,7 @@ class ApiService {
             headers: this.getHeaders(),
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to remove project member');
-        }
+        await this.handleResponse(response);
     }
 
     async getTasks(projectId?: string): Promise<Task[]> {
@@ -283,10 +276,7 @@ class ApiService {
             headers: this.getHeaders(),
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to get tasks');
-        }
-
+        await this.handleResponse(response);
         return response.json();
     }
 
@@ -297,10 +287,7 @@ class ApiService {
             body: JSON.stringify(task),
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to create task');
-        }
-
+        await this.handleResponse(response);
         return response.json();
     }
 
@@ -311,10 +298,7 @@ class ApiService {
             body: JSON.stringify(task),
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to update task');
-        }
-
+        await this.handleResponse(response);
         return response.json();
     }
 
@@ -324,9 +308,7 @@ class ApiService {
             headers: this.getHeaders(),
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to delete task');
-        }
+        await this.handleResponse(response);
     }
 
     async getGanttChart(projectId: string): Promise<{ tasks: GanttTask[] }> {
@@ -334,10 +316,7 @@ class ApiService {
             headers: this.getHeaders(),
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to get Gantt chart data');
-        }
-
+        await this.handleResponse(response);
         return response.json();
     }
 
@@ -346,10 +325,7 @@ class ApiService {
             headers: this.getHeaders(),
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to get project');
-        }
-
+        await this.handleResponse(response);
         return response.json();
     }
 
@@ -358,10 +334,7 @@ class ApiService {
             headers: this.getHeaders(),
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to get comments');
-        }
-
+        await this.handleResponse(response);
         return response.json();
     }
 
@@ -372,10 +345,7 @@ class ApiService {
             body: JSON.stringify(comment),
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to create comment');
-        }
-
+        await this.handleResponse(response);
         return response.json();
     }
 
@@ -385,9 +355,7 @@ class ApiService {
             headers: this.getHeaders(),
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to delete comment');
-        }
+        await this.handleResponse(response);
     }
 
     async getTask(taskId: string): Promise<Task> {
@@ -395,10 +363,7 @@ class ApiService {
             headers: this.getHeaders(),
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to get task');
-        }
-
+        await this.handleResponse(response);
         return response.json();
     }
 
@@ -409,10 +374,7 @@ class ApiService {
             body: JSON.stringify(userData),
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to create user');
-        }
-
+        await this.handleResponse(response);
         return response.json();
     }
 
