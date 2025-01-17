@@ -1,9 +1,10 @@
 from fastapi import Path, Body, HTTPException, status, Depends
 from app.core.endpoints.endpoint import BaseEndpoint
 from app.schemas.project import Project, ProjectCreate, ProjectUpdate, ProjectMember, ProjectMemberBase
+from app.schemas.task import Task
 from app.schemas.base import DefaultResponse
 from app.services.authentication import admin_user_check, user_check
-from app.db.relational import Projects
+from app.db.relational import Projects, Tasks
 from typing import List
 from app.schemas.users import UserRole
 from app.services.email_service import EmailService
@@ -34,10 +35,12 @@ class ProjectsEndpoint(BaseEndpoint):
             raise HTTPException(status_code=404, detail="Project not found")
         return project
 
-    async def get_projects(self, userinfo=Depends(user_check)) -> List[Project]:
+    async def get_projects(self, include_tasks: bool = False, userinfo=Depends(user_check)) -> List[Project]:
         if userinfo.role == UserRole.ADMIN:
-            return Projects.get_all_projects()
-        return Projects.get_user_projects(userinfo.id)
+            projects = Projects.get_all_projects()
+        else:
+            projects = Projects.get_user_projects(userinfo.id)
+        return projects
 
     async def create_project(
         self,

@@ -345,8 +345,18 @@ class ProjectsTable:
             return False
 
     def get_all_projects(self) -> List[ProjectSchema]:
-        return [
-            ProjectSchema.model_validate({
+        projects = ProjectModel.select()
+        result = []
+
+        for p in projects:
+            # Get tasks for this project
+            tasks = [
+                TaskSchema.model_validate(task.to_dict())
+                for task in TaskModel.select().where(TaskModel.project_id == p.id)
+            ]
+
+            # Create project schema with tasks
+            project = ProjectSchema.model_validate({
                 "id": p.id,
                 "name": p.name,
                 "description": p.description,
@@ -355,14 +365,26 @@ class ProjectsTable:
                 "status": p.status,
                 "created_at": p.created_at,
                 "updated_at": p.updated_at,
-                "is_active": p.is_active
+                "is_active": p.is_active,
+                "tasks": tasks  # Include tasks in project data
             })
-            for p in ProjectModel.select()
-        ]
+            result.append(project)
+
+        return result
 
     def get_user_projects(self, user_id: str) -> List[ProjectSchema]:
-        return [
-            ProjectSchema.model_validate({
+        project_members = ProjectMemberModel.select().where(ProjectMemberModel.user_id == user_id)
+        result = []
+
+        for pm in project_members:
+            # Get tasks for this project
+            tasks = [
+                TaskSchema.model_validate(task.to_dict())
+                for task in TaskModel.select().where(TaskModel.project_id == pm.project.id)
+            ]
+
+            # Create project schema with tasks
+            project = ProjectSchema.model_validate({
                 "id": pm.project.id,
                 "name": pm.project.name,
                 "description": pm.project.description,
@@ -371,10 +393,12 @@ class ProjectsTable:
                 "status": pm.project.status,
                 "created_at": pm.project.created_at,
                 "updated_at": pm.project.updated_at,
-                "is_active": pm.project.is_active
+                "is_active": pm.project.is_active,
+                "tasks": tasks  # Include tasks in project data
             })
-            for pm in ProjectMemberModel.select().where(ProjectMemberModel.user_id == user_id)
-        ]
+            result.append(project)
+
+        return result
 
     def get_project(self, project_id: str) -> Optional[ProjectSchema]:
         try:
