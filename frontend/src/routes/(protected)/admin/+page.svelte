@@ -134,12 +134,10 @@
     </div>
 
     <!-- Main Content -->
-    <div
-        class="rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5 dark:bg-gray-800 dark:ring-white/10"
-    >
+    <div class="rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5">
         {#if error}
             <div
-                class="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-900/50 dark:text-red-200"
+                class="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg"
                 transition:fade
             >
                 {error}
@@ -148,7 +146,7 @@
 
         {#if success}
             <div
-                class="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg dark:bg-green-900/50 dark:text-green-200"
+                class="p-4 mb-4 text-sm text-green-700 bg-green-100 rounded-lg"
                 transition:fade
             >
                 {success}
@@ -156,46 +154,44 @@
         {/if}
 
         <div class="overflow-x-auto">
-            <table
-                class="min-w-full divide-y divide-gray-200 dark:divide-gray-700"
-            >
-                <thead class="bg-gray-50 dark:bg-gray-800/50">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
                     <tr>
                         <th
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
                             {$_("admin.userList.columns.name")}
                         </th>
                         <th
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
                             {$_("admin.userList.columns.email")}
                         </th>
                         <th
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
                             {$_("admin.userList.columns.role")}
                         </th>
                         <th
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
                             {$_("admin.userList.columns.status")}
                         </th>
                         <th
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400"
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
                             {$_("admin.userList.columns.created")}
                         </th>
                         <th
-                            class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400"
+                            class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
                         >
                             {$_("admin.userList.columns.actions")}
                         </th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody class="divide-y divide-gray-200">
                     {#each users as user (user.id)}
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     <div class="h-10 w-10 flex-shrink-0">
@@ -213,7 +209,7 @@
                                     </div>
                                     <div class="ml-4">
                                         <div
-                                            class="text-sm font-medium text-gray-900 dark:text-white"
+                                            class="text-sm font-medium text-gray-900"
                                         >
                                             {user.name || user.username}
                                         </div>
@@ -221,15 +217,13 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div
-                                    class="text-sm text-gray-900 dark:text-white"
-                                >
+                                <div class="text-sm text-gray-900">
                                     {user.username}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span
-                                    class="inline-flex rounded-full bg-primary-100 px-2 text-xs font-semibold leading-5 text-primary-800 dark:bg-primary-900/50 dark:text-primary-200"
+                                    class="inline-flex rounded-full bg-primary-100 px-2 text-xs font-semibold leading-5 text-primary-800"
                                 >
                                     {user.role}
                                 </span>
@@ -238,8 +232,8 @@
                                 <span
                                     class={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
                                         user.is_active
-                                            ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200"
-                                            : "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200"
+                                            ? "bg-green-100 text-green-800 "
+                                            : "bg-red-100 text-red-800 "
                                     }`}
                                 >
                                     {user.is_active
@@ -248,7 +242,7 @@
                                 </span>
                             </td>
                             <td
-                                class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"
+                                class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
                             >
                                 {new Date(user.created_at).toLocaleDateString()}
                             </td>
@@ -257,13 +251,13 @@
                             >
                                 <button
                                     on:click={() => openEditModal(user)}
-                                    class="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300 mr-3"
+                                    class="text-primary-600 hover:text-primary-900"
                                 >
                                     {$_("admin.userList.actions.edit")}
                                 </button>
                                 <button
                                     on:click={() => openDeleteModal(user)}
-                                    class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                    class="text-red-600 hover:text-red-900"
                                 >
                                     {$_("admin.userList.actions.delete")}
                                 </button>
@@ -283,21 +277,17 @@
             <div
                 class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
             ></div>
-            <div
-                class="relative rounded-lg bg-white p-8 shadow-xl dark:bg-gray-800"
-            >
-                <h3
-                    class="text-lg font-medium text-gray-900 dark:text-white mb-4"
-                >
+            <div class="relative rounded-lg bg-white p-8 shadow-xl">
+                <h3 class="text-lg font-medium text-gray-900">
                     {$_("admin.deleteModal.title")}
                 </h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400">
+                <p class="text-sm text-gray-500">
                     {$_("admin.deleteModal.message")}
                 </p>
                 <div class="mt-6 flex justify-end space-x-4">
                     <button
                         on:click={() => (showDeleteModal = false)}
-                        class="rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                        class="rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                     >
                         {$_("admin.deleteModal.cancel")}
                     </button>
@@ -321,11 +311,9 @@
                 class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
             ></div>
             <div
-                class="relative w-full max-w-md rounded-lg bg-white p-8 shadow-xl dark:bg-gray-800"
+                class="relative w-full max-w-md rounded-lg bg-white p-8 shadow-xl"
             >
-                <h3
-                    class="text-lg font-medium text-gray-900 dark:text-white mb-4"
-                >
+                <h3 class="text-lg font-medium text-gray-900">
                     {$_("admin.editModal.title")}
                 </h3>
                 <form
@@ -335,7 +323,7 @@
                     <div>
                         <label
                             for="name"
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                            class="block text-sm font-medium text-gray-700"
                         >
                             {$_("admin.editModal.fields.name")}
                         </label>
@@ -343,20 +331,20 @@
                             type="text"
                             id="name"
                             bind:value={editForm.name}
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                         />
                     </div>
                     <div>
                         <label
                             for="role"
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                            class="block text-sm font-medium text-gray-700"
                         >
                             {$_("admin.editModal.fields.role")}
                         </label>
                         <select
                             id="role"
                             bind:value={editForm.role}
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                         >
                             <option value="user"
                                 >{$_("admin.userList.roles.user")}</option
@@ -373,9 +361,7 @@
                                 bind:checked={editForm.is_active}
                                 class="rounded border-gray-300 text-primary-600 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                             />
-                            <span
-                                class="ml-2 text-sm text-gray-700 dark:text-gray-300"
-                            >
+                            <span class="ml-2 text-sm text-gray-700">
                                 {$_("admin.userList.status.active")}
                             </span>
                         </label>
@@ -384,7 +370,7 @@
                         <button
                             type="button"
                             on:click={() => (showEditModal = false)}
-                            class="rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                            class="rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                         >
                             {$_("admin.editModal.cancel")}
                         </button>
@@ -409,11 +395,9 @@
                 class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
             ></div>
             <div
-                class="relative w-full max-w-md rounded-lg bg-white p-8 shadow-xl dark:bg-gray-800"
+                class="relative w-full max-w-md rounded-lg bg-white p-8 shadow-xl"
             >
-                <h3
-                    class="text-lg font-medium text-gray-900 dark:text-white mb-4"
-                >
+                <h3 class="text-lg font-medium text-gray-900">
                     {$_("admin.createModal.title")}
                 </h3>
                 <form
@@ -423,7 +407,7 @@
                     <div>
                         <label
                             for="create-email"
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                            class="block text-sm font-medium text-gray-700"
                         >
                             {$_("admin.createModal.fields.email")}
                         </label>
@@ -432,13 +416,13 @@
                             id="create-email"
                             bind:value={createForm.email}
                             required
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                         />
                     </div>
                     <div>
                         <label
                             for="create-name"
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                            class="block text-sm font-medium text-gray-700"
                         >
                             {$_("admin.createModal.fields.fullName")}
                         </label>
@@ -447,20 +431,20 @@
                             id="create-name"
                             bind:value={createForm.full_name}
                             required
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                         />
                     </div>
                     <div>
                         <label
                             for="create-role"
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                            class="block text-sm font-medium text-gray-700"
                         >
                             {$_("admin.createModal.fields.role")}
                         </label>
                         <select
                             id="create-role"
                             bind:value={createForm.role}
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                         >
                             <option value="user"
                                 >{$_("admin.userList.roles.user")}</option
@@ -474,7 +458,7 @@
                         <button
                             type="button"
                             on:click={() => (showCreateModal = false)}
-                            class="rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                            class="rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                         >
                             {$_("admin.createModal.cancel")}
                         </button>

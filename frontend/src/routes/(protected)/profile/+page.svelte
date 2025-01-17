@@ -76,16 +76,14 @@
     <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <!-- Profile Form -->
         <div class="lg:col-span-2">
-            <div
-                class="rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5 dark:bg-gray-800 dark:ring-white/10"
-            >
+            <div class="rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5">
                 <form
                     on:submit|preventDefault={handleSubmit}
                     class="space-y-6 p-6"
                 >
                     {#if error}
                         <div
-                            class="rounded-lg bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/50 dark:text-red-200"
+                            class="rounded-lg bg-red-50 p-4 text-sm text-red-700"
                             transition:fade
                         >
                             {error}
@@ -94,7 +92,7 @@
 
                     {#if success}
                         <div
-                            class="rounded-lg bg-green-50 p-4 text-sm text-green-700 dark:bg-green-900/50 dark:text-green-200"
+                            class="rounded-lg bg-green-50 p-4 text-sm text-green-700"
                             transition:fade
                         >
                             {success}
@@ -103,16 +101,14 @@
 
                     <!-- Basic Information -->
                     <div>
-                        <h2
-                            class="text-lg font-medium text-gray-900 dark:text-white"
-                        >
+                        <h2 class="text-lg font-medium text-gray-900">
                             {$_("profile.sections.basicInfo")}
                         </h2>
                         <div class="mt-4 grid grid-cols-1 gap-6">
                             <div>
                                 <label
                                     for="name"
-                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                    class="block text-sm font-medium text-gray-700"
                                 >
                                     {$_("profile.fields.name")}
                                 </label>
@@ -120,14 +116,14 @@
                                     type="text"
                                     id="name"
                                     bind:value={formData.name}
-                                    class="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-white dark:ring-gray-600"
+                                    class="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
                                 />
                             </div>
 
                             <div>
                                 <label
                                     for="email"
-                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                    class="block text-sm font-medium text-gray-700"
                                 >
                                     {$_("profile.fields.email")}
                                 </label>
@@ -136,7 +132,7 @@
                                     id="email"
                                     value={formData.email}
                                     disabled
-                                    class="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 bg-gray-50 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-white dark:ring-gray-600 cursor-not-allowed"
+                                    class="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 bg-gray-50 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
                                 />
                             </div>
                         </div>
@@ -144,16 +140,14 @@
 
                     <!-- Password Change -->
                     <div class="pt-6">
-                        <h2
-                            class="text-lg font-medium text-gray-900 dark:text-white"
-                        >
+                        <h2 class="text-lg font-medium text-gray-900">
                             {$_("profile.sections.changePassword")}
                         </h2>
                         <div class="mt-4 grid grid-cols-1 gap-6">
                             <div>
                                 <label
                                     for="currentPassword"
-                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                    class="block text-sm font-medium text-gray-700"
                                 >
                                     {$_("profile.fields.currentPassword")}
                                 </label>
@@ -161,14 +155,14 @@
                                     type="password"
                                     id="currentPassword"
                                     bind:value={formData.currentPassword}
-                                    class="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-white dark:ring-gray-600"
+                                    class="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
                                 />
                             </div>
 
                             <div>
                                 <label
                                     for="newPassword"
-                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                    class="block text-sm font-medium text-gray-700"
                                 >
                                     {$_("profile.fields.newPassword")}
                                 </label>
@@ -176,14 +170,14 @@
                                     type="password"
                                     id="newPassword"
                                     bind:value={formData.newPassword}
-                                    class="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-white dark:ring-gray-600"
+                                    class="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
                                 />
                             </div>
 
                             <div>
                                 <label
                                     for="confirmPassword"
-                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                    class="block text-sm font-medium text-gray-700"
                                 >
                                     {$_("profile.fields.confirmPassword")}
                                 </label>
@@ -191,7 +185,7 @@
                                     type="password"
                                     id="confirmPassword"
                                     bind:value={formData.confirmPassword}
-                                    class="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-white dark:ring-gray-600"
+                                    class="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
                                 />
                             </div>
                         </div>
@@ -234,9 +228,7 @@
 
         <!-- Profile Summary -->
         <div class="space-y-6">
-            <div
-                class="rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5 dark:bg-gray-800 dark:ring-white/10"
-            >
+            <div class="rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5">
                 <div class="p-6">
                     <div class="flex items-center">
                         <div
@@ -247,17 +239,13 @@
                                 "U"}
                         </div>
                         <div class="ml-4">
-                            <h2
-                                class="text-lg font-medium text-gray-900 dark:text-white"
-                            >
+                            <h2 class="text-lg font-medium text-gray-900">
                                 {$user?.name || $user?.username}
                             </h2>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">
+                            <p class="text-sm text-gray-500">
                                 {$user?.email}
                             </p>
-                            <p
-                                class="text-sm text-gray-500 dark:text-gray-400 capitalize"
-                            >
+                            <p class="text-sm text-gray-500">
                                 {$user?.role}
                             </p>
                         </div>

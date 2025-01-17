@@ -404,22 +404,20 @@
             <!-- Subtasks List -->
             <div class="lg:col-span-2 space-y-6">
                 <div
-                    class="rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5 dark:bg-gray-800 dark:ring-white/10"
+                    class="rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5"
                 >
                     <div class="p-6">
                         <h2
-                            class="text-base font-semibold leading-7 text-gray-900 dark:text-white"
+                            class="text-base font-semibold leading-7 text-gray-900"
                         >
                             {$_("common.subtasks")}
                         </h2>
                         {#if task.subtasks?.length}
                             <div class="mt-6 flow-root">
-                                <ul
-                                    class="divide-y divide-gray-100 dark:divide-gray-700"
-                                >
+                                <ul class="divide-y divide-gray-100">
                                     {#each task.subtasks as task (task.id)}
                                         <li
-                                            class="relative py-5 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                                            class="relative py-5 hover:bg-gray-50"
                                         >
                                             <div class="px-4 sm:px-6">
                                                 <div
@@ -427,7 +425,7 @@
                                                 >
                                                     <a
                                                         href="/projects/{projectId}/tasks/{task.id}"
-                                                        class="text-sm font-medium text-gray-900 hover:text-primary-600 dark:text-white dark:hover:text-primary-400"
+                                                        class="text-sm font-medium text-gray-900 hover:text-primary-600"
                                                     >
                                                         {task.name}
                                                     </a>
@@ -458,7 +456,7 @@
                                                                     </span>
                                                                 </div>
                                                                 <span
-                                                                    class="ml-2 text-sm text-gray-500 dark:text-gray-400"
+                                                                    class="ml-2 text-sm text-gray-500"
                                                                 >
                                                                     {users.find(
                                                                         (u) =>
@@ -497,7 +495,7 @@
                                                                     }
                                                                 }
                                                             }}
-                                                            class="text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400"
+                                                            class="text-gray-400 hover:text-red-600"
                                                         >
                                                             <svg
                                                                 xmlns="http://www.w3.org/2000/svg"
@@ -518,7 +516,7 @@
                                                 </div>
                                                 <div class="mt-2">
                                                     <p
-                                                        class="text-sm text-gray-600 line-clamp-2 dark:text-gray-300"
+                                                        class="text-sm text-gray-600 line-clamp-2"
                                                     >
                                                         {task.description}
                                                     </p>
@@ -529,9 +527,7 @@
                                 </ul>
                             </div>
                         {:else}
-                            <p
-                                class="mt-4 text-sm text-gray-500 dark:text-gray-400"
-                            >
+                            <p class="mt-4 text-sm text-gray-500">
                                 {$_("common.noSubtasks")}
                             </p>
                         {/if}
@@ -542,11 +538,11 @@
             <!-- Comments Section -->
             <div class="space-y-6">
                 <div
-                    class="rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5 dark:bg-gray-800 dark:ring-white/10"
+                    class="rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5"
                 >
                     <div class="p-6">
                         <h2
-                            class="text-base font-semibold leading-7 text-gray-900 dark:text-white"
+                            class="text-base font-semibold leading-7 text-gray-900"
                         >
                             Comments
                         </h2>
@@ -557,7 +553,7 @@
                                     bind:value={newComment}
                                     placeholder="Add a comment..."
                                     rows="3"
-                                    class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-white dark:ring-gray-600"
+                                    class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
                                 ></textarea>
                                 <div class="mt-2 flex justify-end">
                                     <button
@@ -591,7 +587,7 @@
                                                     class="flex items-center justify-between"
                                                 >
                                                     <p
-                                                        class="text-sm font-medium text-gray-900 dark:text-white"
+                                                        class="text-sm font-medium text-gray-900"
                                                     >
                                                         {comment.user?.name ||
                                                             comment.user
@@ -599,7 +595,7 @@
                                                             "Unknown User"}
                                                     </p>
                                                     <p
-                                                        class="text-xs text-gray-500 dark:text-gray-400"
+                                                        class="text-xs text-gray-500"
                                                     >
                                                         {new Date(
                                                             comment.created_at,
@@ -607,7 +603,7 @@
                                                     </p>
                                                 </div>
                                                 <p
-                                                    class="mt-1 text-sm text-gray-600 dark:text-gray-300"
+                                                    class="mt-1 text-sm text-gray-600"
                                                 >
                                                     {comment.content}
                                                 </p>
@@ -627,16 +623,16 @@
 <!-- Create Subtask Modal -->
 {#if showCreateTaskModal}
     <div
-        class="fixed inset-0 z-50 overflow-y-auto backdrop-blur-sm bg-gray-500/30 dark:bg-gray-900/30"
+        class="fixed inset-0 z-50 overflow-y-auto backdrop-blur-sm bg-gray-500/30"
         transition:fade
         on:click|self={() => (showCreateTaskModal = false)}
     >
         <div class="flex min-h-screen items-center justify-center p-4">
             <div
-                class="relative w-full max-w-2xl rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800"
+                class="relative w-full max-w-2xl rounded-xl bg-white p-6 shadow-lg"
                 transition:fly={{ y: 20 }}
             >
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                <h3 class="text-lg font-semibold text-gray-900">
                     {$_("common.addSubtask")}
                 </h3>
                 <form
@@ -654,7 +650,7 @@
                     <div>
                         <label
                             for="task-name"
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                            class="block text-sm font-medium text-gray-700"
                             >{$_("common.taskName")}</label
                         >
                         <input
@@ -662,27 +658,27 @@
                             id="task-name"
                             bind:value={newTask.name}
                             required
-                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700"
+                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500"
                         />
                     </div>
                     <div>
                         <label
                             for="task-description"
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                            class="block text-sm font-medium text-gray-700"
                             >{$_("common.taskDescription")}</label
                         >
                         <textarea
                             id="task-description"
                             bind:value={newTask.description}
                             rows="3"
-                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700"
+                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500"
                         />
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label
                                 for="start-date"
-                                class="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                                class="block text-sm font-medium text-gray-700"
                                 >Start Date</label
                             >
                             <input
@@ -690,13 +686,13 @@
                                 id="start-date"
                                 bind:value={newTask.start_date}
                                 required
-                                class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700"
+                                class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500"
                             />
                         </div>
                         <div>
                             <label
                                 for="deadline"
-                                class="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                                class="block text-sm font-medium text-gray-700"
                                 >Deadline</label
                             >
                             <input
@@ -704,20 +700,20 @@
                                 id="deadline"
                                 bind:value={newTask.deadline}
                                 required
-                                class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700"
+                                class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500"
                             />
                         </div>
                     </div>
                     <div>
                         <label
                             for="assigned-to"
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                            class="block text-sm font-medium text-gray-700"
                             >Assign To</label
                         >
                         <select
                             id="assigned-to"
                             bind:value={newTask.assigned_to_id}
-                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700"
+                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500"
                         >
                             <option value="">Select team member</option>
                             {#each projectMembers as member}
@@ -731,7 +727,7 @@
                         <button
                             type="button"
                             on:click={() => (showCreateTaskModal = false)}
-                            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
+                            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                             >{$_("common.cancel")}</button
                         >
                         <button

@@ -180,15 +180,13 @@
         <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" transition:fade>
             {#each projects as project (project.id)}
                 <div
-                    class="group relative overflow-hidden rounded-xl bg-white shadow-md ring-1 ring-black/5 hover:shadow-lg transition-all duration-300 dark:bg-gray-800 dark:ring-white/10"
+                    class="group relative overflow-hidden rounded-xl bg-white shadow-md ring-1 ring-black/5 hover:shadow-lg transition-all duration-300"
                     transition:fly={{ y: 20, duration: 300 }}
                 >
                     <!-- Project card content -->
                     <div class="p-6">
                         <div class="flex items-center justify-between">
-                            <h3
-                                class="text-lg font-semibold text-gray-900 dark:text-white"
-                            >
+                            <h3 class="text-lg font-semibold text-gray-900">
                                 {project.name}
                             </h3>
                             <span
@@ -200,9 +198,7 @@
                             </span>
                         </div>
 
-                        <p
-                            class="mt-2 text-sm text-gray-600 line-clamp-2 dark:text-gray-300"
-                        >
+                        <p class="mt-2 text-sm text-gray-600 line-clamp-2">
                             {project.description}
                         </p>
 
@@ -211,7 +207,7 @@
                             <div
                                 class="flex items-center justify-between text-xs"
                             >
-                                <span class="text-gray-600 dark:text-gray-400">
+                                <span class="text-gray-600">
                                     {#if project.tasks?.length}
                                         {project.tasks.filter(
                                             (t) => t.status === "completed",
@@ -221,14 +217,12 @@
                                         {$_("common.noTasks")}
                                     {/if}
                                 </span>
-                                <span
-                                    class="font-medium text-gray-900 dark:text-white"
-                                >
+                                <span class="font-medium text-gray-900">
                                     {getProgress(project)}%
                                 </span>
                             </div>
                             <div
-                                class="mt-1 h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700"
+                                class="mt-1 h-2 w-full rounded-full bg-gray-200"
                             >
                                 <div
                                     class="h-2 rounded-full transition-all duration-500 {getProgressColor(
@@ -243,7 +237,7 @@
                         <div
                             class="mt-4 flex items-center justify-between text-sm"
                         >
-                            <div class="text-gray-600 dark:text-gray-400">
+                            <div class="text-gray-600">
                                 <span
                                     >{new Date(
                                         project.start_date,
@@ -279,12 +273,12 @@
 
                     <!-- Quick actions -->
                     <div
-                        class="absolute inset-x-0 bottom-0 translate-y-full bg-gray-50/90 backdrop-blur-sm p-4 transition-transform duration-300 group-hover:translate-y-0 dark:bg-gray-700/50"
+                        class="absolute inset-x-0 bottom-0 translate-y-full bg-gray-50/90 backdrop-blur-sm p-4 transition-transform duration-300 group-hover:translate-y-0"
                     >
                         <div class="flex justify-end space-x-3">
                             {#if $user?.role === "admin"}
                                 <button
-                                    class="inline-flex items-center rounded-md bg-white/50 backdrop-blur-sm px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800/50 dark:text-white dark:ring-gray-600 dark:hover:bg-gray-700"
+                                    class="inline-flex items-center rounded-md bg-white/50 backdrop-blur-sm px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
                                     on:click={() =>
                                         handleDeleteProject(project.id)}
                                 >
@@ -347,13 +341,13 @@
             class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0"
         >
             <div
-                class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 dark:bg-gray-800"
+                class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6"
                 transition:fly={{ y: 20, duration: 300 }}
             >
                 <form on:submit|preventDefault={handleCreateProject}>
                     <div>
                         <h3
-                            class="text-lg font-semibold leading-6 text-gray-900 dark:text-white"
+                            class="text-lg font-semibold leading-6 text-gray-900"
                         >
                             {$_("projects.createProject")}
                         </h3>
@@ -361,7 +355,7 @@
                             <div>
                                 <label
                                     for="name"
-                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                    class="block text-sm font-medium text-gray-700"
                                 >
                                     {$_("projects.fields.name")}
                                 </label>
@@ -371,14 +365,14 @@
                                     id="name"
                                     required
                                     bind:value={newProject.name}
-                                    class="mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-white dark:ring-gray-600"
+                                    class="mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
                                 />
                             </div>
 
                             <div>
                                 <label
                                     for="description"
-                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                    class="block text-sm font-medium text-gray-700"
                                 >
                                     {$_("projects.fields.description")}
                                 </label>
@@ -388,7 +382,7 @@
                                     rows="3"
                                     required
                                     bind:value={newProject.description}
-                                    class="mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-white dark:ring-gray-600"
+                                    class="mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
                                 ></textarea>
                             </div>
 
@@ -396,7 +390,7 @@
                                 <div>
                                     <label
                                         for="start_date"
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                        class="block text-sm font-medium text-gray-700"
                                     >
                                         {$_("projects.fields.startDate")}
                                     </label>
@@ -406,14 +400,14 @@
                                         id="start_date"
                                         required
                                         bind:value={newProject.start_date}
-                                        class="mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-white dark:ring-gray-600"
+                                        class="mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
                                     />
                                 </div>
 
                                 <div>
                                     <label
                                         for="deadline"
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                        class="block text-sm font-medium text-gray-700"
                                     >
                                         {$_("projects.fields.deadline")}
                                     </label>
@@ -423,7 +417,7 @@
                                         id="deadline"
                                         required
                                         bind:value={newProject.deadline}
-                                        class="mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-white dark:ring-gray-600"
+                                        class="mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
                                     />
                                 </div>
                             </div>
@@ -433,7 +427,7 @@
                         <button
                             type="button"
                             on:click={() => (showCreateModal = false)}
-                            class="rounded-md px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:text-white dark:ring-gray-600 dark:hover:bg-gray-700"
+                            class="rounded-md px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
                         >
                             {$_("common.cancel")}
                         </button>

@@ -39,7 +39,7 @@
 </script>
 
 <div
-    class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800"
+    class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 "
 >
     <!-- Mobile sidebar backdrop -->
     {#if isSidebarOpen}
@@ -52,13 +52,13 @@
 
     <!-- Sidebar -->
     <div
-        class={`fixed top-0 left-0 bottom-0 w-64 bg-white dark:bg-gray-800 shadow-xl transform transition-transform duration-200 ease-in-out z-50 lg:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
+        class={`fixed top-0 left-0 bottom-0 w-64 bg-white "}`}
     >
         <div class="h-full flex flex-col">
             <!-- Logo -->
             <div class="flex-shrink-0 px-4 py-6 flex items-center">
                 <span
-                    class="ml-3 text-xl font-bold text-gray-900 dark:text-white"
+                    class="ml-3 text-xl font-bold text-gray-900 "
                     >Dashboard</span
                 >
             </div>
@@ -70,15 +70,15 @@
                         href={item.href}
                         class={`group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
                             currentPath.startsWith(item.href)
-                                ? "bg-primary-50 text-primary-700 dark:bg-primary-900/50 dark:text-primary-100"
-                                : "text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700/50"
+                                ? "bg-primary-50 text-primary-700 "
+                                : "text-gray-700 hover:bg-gray-50 "
                         }`}
                     >
                         <svg
                             class={`mr-3 h-5 w-5 transition-colors duration-200 ${
                                 currentPath.startsWith(item.href)
-                                    ? "text-primary-500 dark:text-primary-400"
-                                    : "text-gray-400 group-hover:text-gray-500 dark:text-gray-400 dark:group-hover:text-gray-300"
+                                    ? "text-primary-500 "
+                                    : "text-gray-400 group-hover:text-gray-500 "
                             }`}
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
@@ -99,7 +99,7 @@
 
             <!-- User profile -->
             <div
-                class="flex-shrink-0 p-4 border-t border-gray-200 dark:border-gray-700"
+                class="flex-shrink-0 p-4 border-t border-gray-200 "
             >
                 <div class="flex items-center">
                     <div
@@ -111,17 +111,17 @@
                     </div>
                     <div class="ml-3 flex-1">
                         <p
-                            class="text-sm font-medium text-gray-900 dark:text-white"
+                            class="text-sm font-medium text-gray-900 "
                         >
                             {$user?.name || $user?.username}
                         </p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                        <p class="text-xs text-gray-500 ">
                             {$user?.role}
                         </p>
                     </div>
                     <button
                         on:click={logout}
-                        class="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                        class="p-2 text-gray-500 hover:text-gray-700 "
                         title={$_("common.logout")}
                     >
                         <svg
@@ -148,7 +148,7 @@
     <div class="lg:pl-64">
         <!-- Top bar -->
         <div
-            class="sticky top-0 z-10 flex h-16 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm"
+            class="sticky top-0 z-10 flex h-16 bg-white/80 "
         >
             <button
                 type="button"

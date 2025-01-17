@@ -365,13 +365,9 @@
 
         <!-- Gantt Chart -->
         {#if !loading && project && ganttTasks.length > 0}
-            <div
-                class="rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5 dark:bg-gray-800 dark:ring-white/10"
-            >
+            <div class="rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5">
                 <div class="p-6">
-                    <h2
-                        class="text-base font-semibold leading-7 text-gray-900 dark:text-white"
-                    >
+                    <h2 class="text-base font-semibold leading-7 text-gray-900">
                         {$_("common.timeline")}
                     </h2>
                     <div class="mt-6">
@@ -387,16 +383,14 @@
                                     style="width: {timelineDays * 3}%"
                                 >
                                     <!-- Timeline header with sticky positioning -->
-                                    <div
-                                        class="sticky top-0 z-10 bg-white dark:bg-gray-800"
-                                    >
+                                    <div class="sticky top-0 z-10 bg-white">
                                         <div
-                                            class="flex border-b border-gray-200 dark:border-gray-700"
+                                            class="flex border-b border-gray-200"
                                         >
                                             {#each timelineDates as date, i}
                                                 <div class="flex-none w-[3%]">
                                                     <div
-                                                        class="px-1 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 text-center"
+                                                        class="px-1 py-2 text-xs font-medium text-gray-500"
                                                     >
                                                         {date.toLocaleDateString(
                                                             undefined,
@@ -417,7 +411,7 @@
                                         <div class="absolute inset-0 flex">
                                             {#each timelineDates as _, i}
                                                 <div
-                                                    class="flex-none w-[3%] border-l border-gray-100 dark:border-gray-700"
+                                                    class="flex-none w-[3%] border-l border-gray-100"
                                                 ></div>
                                             {/each}
                                         </div>
@@ -426,7 +420,7 @@
                                         <div class="relative">
                                             {#each ganttTasks as task, i}
                                                 <div
-                                                    class="h-12 flex items-center group hover:bg-gray-50/50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700/50"
+                                                    class="h-12 flex items-center group hover:bg-gray-50/50"
                                                 >
                                                     <div
                                                         on:click={() => {
@@ -476,30 +470,26 @@
             <!-- Tasks List -->
             <div class="lg:col-span-2 space-y-6">
                 <div
-                    class="rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5 dark:bg-gray-800 dark:ring-white/10"
+                    class="rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5"
                 >
                     <div class="p-6">
                         <h2
-                            class="text-base font-semibold leading-7 text-gray-900 dark:text-white"
+                            class="text-base font-semibold leading-7 text-gray-900"
                         >
                             {$_("common.tasks")}
                         </h2>
                         {#if tasks.length == 0}
                             <div class="mt-6 flow-root">
-                                <p
-                                    class="text-sm text-gray-500 dark:text-gray-400"
-                                >
+                                <p class="text-sm text-gray-500">
                                     {$_("common.noTasks")}
                                 </p>
                             </div>
                         {:else}
                             <div class="mt-6 flow-root">
-                                <ul
-                                    class="divide-y divide-gray-100 dark:divide-gray-700"
-                                >
+                                <ul class="divide-y divide-gray-100">
                                     {#each tasks.filter((t) => !t.parent_task_id) as task (task.id)}
                                         <li
-                                            class="relative py-5 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                                            class="relative py-5 hover:bg-gray-50"
                                         >
                                             <div class="px-4 sm:px-6">
                                                 <div
@@ -507,7 +497,7 @@
                                                 >
                                                     <a
                                                         href="/projects/{projectId}/tasks/{task.id}"
-                                                        class="text-sm font-medium text-gray-900 hover:text-primary-600 dark:text-white dark:hover:text-primary-400"
+                                                        class="text-sm font-medium text-gray-900 hover:text-primary-600"
                                                     >
                                                         {task.name}
                                                     </a>
@@ -538,7 +528,7 @@
                                                                     </span>
                                                                 </div>
                                                                 <span
-                                                                    class="ml-2 text-sm text-gray-500 dark:text-gray-400"
+                                                                    class="ml-2 text-sm text-gray-500"
                                                                 >
                                                                     {users.find(
                                                                         (u) =>
@@ -577,7 +567,7 @@
                                                                     }
                                                                 }
                                                             }}
-                                                            class="text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400"
+                                                            class="text-gray-400 hover:text-red-600"
                                                         >
                                                             <svg
                                                                 xmlns="http://www.w3.org/2000/svg"
@@ -598,7 +588,7 @@
                                                 </div>
                                                 <div class="mt-2">
                                                     <p
-                                                        class="text-sm text-gray-600 line-clamp-2 dark:text-gray-300"
+                                                        class="text-sm text-gray-600 line-clamp-2"
                                                     >
                                                         {task.description}
                                                     </p>
@@ -616,18 +606,16 @@
             <!-- Team Members -->
             <div class="space-y-6">
                 <div
-                    class="rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5 dark:bg-gray-800 dark:ring-white/10"
+                    class="rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5"
                 >
                     <div class="p-6">
                         <h2
-                            class="text-base font-semibold leading-7 text-gray-900 dark:text-white"
+                            class="text-base font-semibold leading-7 text-gray-900"
                         >
                             {$_("common.projectMembers")}
                         </h2>
                         <div class="mt-6 flow-root">
-                            <ul
-                                class="divide-y divide-gray-100 dark:divide-gray-700"
-                            >
+                            <ul class="divide-y divide-gray-100">
                                 {#each projectMembers as member (member.id)}
                                     <li class="py-5">
                                         <div
@@ -647,14 +635,14 @@
                                             </div>
                                             <div class="min-w-0 flex-1">
                                                 <p
-                                                    class="text-sm font-medium text-gray-900 dark:text-white"
+                                                    class="text-sm font-medium text-gray-900"
                                                 >
                                                     {member.user?.name ||
                                                         member.user?.username ||
                                                         "Unknown User"}
                                                 </p>
                                                 <p
-                                                    class="text-sm text-gray-500 dark:text-gray-400"
+                                                    class="text-sm text-gray-500"
                                                 >
                                                     {member.role ===
                                                     "project_manager"
@@ -677,16 +665,16 @@
 <!-- Modals -->
 {#if showCreateTaskModal}
     <div
-        class="fixed inset-0 z-50 overflow-y-auto backdrop-blur-sm bg-gray-500/30 dark:bg-gray-900/30"
+        class="fixed inset-0 z-50 overflow-y-auto backdrop-blur-sm bg-gray-500/30"
         transition:fade
         on:click|self={() => (showCreateTaskModal = false)}
     >
         <div class="flex min-h-screen items-center justify-center p-4">
             <div
-                class="relative w-full max-w-2xl rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800"
+                class="relative w-full max-w-2xl rounded-xl bg-white p-6 shadow-lg"
                 transition:fly={{ y: 20 }}
             >
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                <h3 class="text-lg font-semibold text-gray-900">
                     {$_("common.createTask")}
                 </h3>
                 <form
@@ -704,7 +692,7 @@
                     <div>
                         <label
                             for="task-name"
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                            class="block text-sm font-medium text-gray-700"
                             >{$_("common.taskName")}</label
                         >
                         <input
@@ -712,27 +700,27 @@
                             id="task-name"
                             bind:value={newTask.name}
                             required
-                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700"
+                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500"
                         />
                     </div>
                     <div>
                         <label
                             for="task-description"
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                            class="block text-sm font-medium text-gray-700"
                             >{$_("common.taskDescription")}</label
                         >
                         <textarea
                             id="task-description"
                             bind:value={newTask.description}
                             rows="3"
-                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700"
+                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500"
                         />
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label
                                 for="start-date"
-                                class="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                                class="block text-sm font-medium text-gray-700"
                                 >{$_("common.taskStartDate")}</label
                             >
                             <input
@@ -740,13 +728,13 @@
                                 id="start-date"
                                 bind:value={newTask.start_date}
                                 required
-                                class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700"
+                                class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500"
                             />
                         </div>
                         <div>
                             <label
                                 for="deadline"
-                                class="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                                class="block text-sm font-medium text-gray-700"
                                 >{$_("common.taskDeadline")}</label
                             >
                             <input
@@ -754,20 +742,20 @@
                                 id="deadline"
                                 bind:value={newTask.deadline}
                                 required
-                                class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700"
+                                class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500"
                             />
                         </div>
                     </div>
                     <div>
                         <label
                             for="assigned-to"
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                            class="block text-sm font-medium text-gray-700"
                             >{$_("common.taskAssignTo")}</label
                         >
                         <select
                             id="assigned-to"
                             bind:value={newTask.assigned_to_id}
-                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700"
+                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500"
                         >
                             <option value=""
                                 >{$_("common.taskUnassigned")}</option
@@ -783,7 +771,7 @@
                         <button
                             type="button"
                             on:click={() => (showCreateTaskModal = false)}
-                            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
+                            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                             >{$_("common.cancel")}</button
                         >
                         <button
@@ -800,16 +788,16 @@
 
 {#if showAddMemberModal}
     <div
-        class="fixed inset-0 z-50 overflow-y-auto backdrop-blur-sm bg-gray-500/30 dark:bg-gray-900/30"
+        class="fixed inset-0 z-50 overflow-y-auto backdrop-blur-sm bg-gray-500/30"
         transition:fade
         on:click|self={() => (showAddMemberModal = false)}
     >
         <div class="flex min-h-screen items-center justify-center p-4">
             <div
-                class="relative w-full max-w-2xl rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800"
+                class="relative w-full max-w-2xl rounded-xl bg-white p-6 shadow-lg"
                 transition:fly={{ y: 20 }}
             >
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                <h3 class="text-lg font-semibold text-gray-900">
                     {$_("common.addMember")}
                 </h3>
                 <form
@@ -827,14 +815,14 @@
                     <div>
                         <label
                             for="user"
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                            class="block text-sm font-medium text-gray-700"
                             >{$_("common.selectUser")}</label
                         >
                         <select
                             id="user"
                             bind:value={newMember.user_id}
                             required
-                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700"
+                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500"
                         >
                             <option value="">{$_("common.selectUser")}</option>
                             {#each availableUsers as user}
@@ -849,14 +837,14 @@
                     <div>
                         <label
                             for="role"
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                            class="block text-sm font-medium text-gray-700"
                             >{$_("common.role")}</label
                         >
                         <select
                             id="role"
                             bind:value={newMember.role}
                             required
-                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700"
+                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500"
                         >
                             <option value="project_member"
                                 >{$_("common.projectMember")}</option
@@ -870,7 +858,7 @@
                         <button
                             type="button"
                             on:click={() => (showAddMemberModal = false)}
-                            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
+                            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                             >{$_("common.cancel")}</button
                         >
                         <button
