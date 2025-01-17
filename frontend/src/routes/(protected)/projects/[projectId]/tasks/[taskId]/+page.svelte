@@ -191,7 +191,7 @@
                                 </h1>
                             </div>
                         </div>
-                        <p class="mt-2 text-lg text-primary-100">
+                        <p class="mt-2 text-lg text-primary-100 max-w-xl">
                             {task?.description}
                         </p>
                     </div>

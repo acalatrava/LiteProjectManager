@@ -198,7 +198,7 @@
                                 {project.name}
                             </h1>
                         </div>
-                        <p class="mt-2 text-lg text-primary-100">
+                        <p class="mt-2 text-lg text-primary-100 max-w-xl">
                             {project.description}
                         </p>
                     </div>

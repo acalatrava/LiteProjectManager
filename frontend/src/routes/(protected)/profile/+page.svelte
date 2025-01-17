@@ -66,7 +66,7 @@
             <h1 class="text-3xl font-bold text-white">
                 {$_("profile.title")}
             </h1>
-            <p class="mt-2 text-lg text-primary-100">
+            <p class="mt-2 text-lg text-primary-100 max-w-xl">
                 {$_("profile.description")}
             </p>
         </div>

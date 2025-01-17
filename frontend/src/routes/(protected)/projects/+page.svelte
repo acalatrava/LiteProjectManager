@@ -110,7 +110,7 @@
                     <h1 class="text-3xl font-bold text-white">
                         {$_("common.projects")}
                     </h1>
-                    <p class="mt-2 text-lg text-primary-100">
+                    <p class="mt-2 text-lg text-primary-100 max-w-xl">
                         {$_("projects.description")}
                     </p>
                 </div>
