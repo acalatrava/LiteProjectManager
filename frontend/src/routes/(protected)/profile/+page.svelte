@@ -1,396 +1,268 @@
 <script lang="ts">
-    import { user } from "$lib/stores/auth";
-    import { api } from "$lib/services/api";
     import { onMount } from "svelte";
+    import { api } from "$lib/services/api";
+    import { user } from "$lib/stores/auth";
     import { _ } from "svelte-i18n";
+    import { fade } from "svelte/transition";
 
     let loading = false;
     let error = "";
     let success = "";
-    let editMode = false;
-    let editedUser = {
+
+    let formData = {
         name: $user?.name || "",
-        current_password: "",
-        new_password: "",
-        confirm_password: "",
+        email: $user?.username || "",
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
     };
 
-    let showPasswordFields = false;
-
-    async function handleUpdateProfile(event: Event) {
-        event.preventDefault();
+    async function handleSubmit() {
         loading = true;
         error = "";
         success = "";
 
         try {
-            const updateData: any = { name: editedUser.name };
-
-            // Only include password update if the user is changing it
-            if (showPasswordFields) {
-                if (!editedUser.current_password) {
-                    throw new Error($_("profile.currentPasswordRequired"));
+            if (formData.newPassword) {
+                if (formData.newPassword !== formData.confirmPassword) {
+                    throw new Error($_("profile.errors.passwordMismatch"));
                 }
-                if (editedUser.new_password !== editedUser.confirm_password) {
-                    throw new Error($_("profile.passwordsDoNotMatch"));
+                if (!formData.currentPassword) {
+                    throw new Error(
+                        $_("profile.errors.currentPasswordRequired"),
+                    );
                 }
-                if (editedUser.new_password.length < 8) {
-                    throw new Error($_("profile.passwordTooShort"));
-                }
-                updateData.current_password = editedUser.current_password;
-                updateData.new_password = editedUser.new_password;
             }
 
-            await api.updateCurrentUser(updateData);
-            const updatedUser = await api.getCurrentUser();
-            user.set(updatedUser);
-            editMode = false;
-            showPasswordFields = false;
-            success = $_("profile.updateSuccess");
+            const updatedUser = await api.updateProfile({
+                name: formData.name,
+                email: formData.email,
+                current_password: formData.currentPassword || undefined,
+                new_password: formData.newPassword || undefined,
+            });
 
-            // Clear password fields
-            editedUser.current_password = "";
-            editedUser.new_password = "";
-            editedUser.confirm_password = "";
-        } catch (err: any) {
-            error = err.message || $_("profile.updateError");
-            console.error(err);
+            user.set(updatedUser);
+            success = $_("profile.success.profileUpdated");
+
+            // Reset password fields
+            formData.currentPassword = "";
+            formData.newPassword = "";
+            formData.confirmPassword = "";
+        } catch (err) {
+            error = err.message || $_("profile.errors.updateFailed");
         } finally {
             loading = false;
         }
     }
 </script>
 
-<div class="py-6">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="md:grid md:grid-cols-3 md:gap-6">
-            <div class="md:col-span-1">
-                <div class="px-4 sm:px-0">
-                    <h3 class="text-lg font-medium leading-6 text-gray-900">
-                        {$_("profile.title")}
-                    </h3>
-                    <p class="mt-1 text-sm text-gray-600">
-                        {$_("profile.personalInfo")}
-                    </p>
-                </div>
+<div class="space-y-8">
+    <!-- Header -->
+    <div
+        class="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary-600 to-primary-800 p-8 shadow-lg"
+    >
+        <div class="absolute inset-0 bg-grid-white/10"></div>
+        <div class="relative">
+            <h1 class="text-3xl font-bold text-white">
+                {$_("profile.title")}
+            </h1>
+            <p class="mt-2 text-lg text-primary-100">
+                {$_("profile.description")}
+            </p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+        <!-- Profile Form -->
+        <div class="lg:col-span-2">
+            <div
+                class="rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5 dark:bg-gray-800 dark:ring-white/10"
+            >
+                <form
+                    on:submit|preventDefault={handleSubmit}
+                    class="space-y-6 p-6"
+                >
+                    {#if error}
+                        <div
+                            class="rounded-lg bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/50 dark:text-red-200"
+                            transition:fade
+                        >
+                            {error}
+                        </div>
+                    {/if}
+
+                    {#if success}
+                        <div
+                            class="rounded-lg bg-green-50 p-4 text-sm text-green-700 dark:bg-green-900/50 dark:text-green-200"
+                            transition:fade
+                        >
+                            {success}
+                        </div>
+                    {/if}
+
+                    <!-- Basic Information -->
+                    <div>
+                        <h2
+                            class="text-lg font-medium text-gray-900 dark:text-white"
+                        >
+                            {$_("profile.sections.basicInfo")}
+                        </h2>
+                        <div class="mt-4 grid grid-cols-1 gap-6">
+                            <div>
+                                <label
+                                    for="name"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                >
+                                    {$_("profile.fields.name")}
+                                </label>
+                                <input
+                                    type="text"
+                                    id="name"
+                                    bind:value={formData.name}
+                                    class="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-white dark:ring-gray-600"
+                                />
+                            </div>
+
+                            <div>
+                                <label
+                                    for="email"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                >
+                                    {$_("profile.fields.email")}
+                                </label>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    value={formData.email}
+                                    disabled
+                                    class="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 bg-gray-50 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-white dark:ring-gray-600 cursor-not-allowed"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Password Change -->
+                    <div class="pt-6">
+                        <h2
+                            class="text-lg font-medium text-gray-900 dark:text-white"
+                        >
+                            {$_("profile.sections.changePassword")}
+                        </h2>
+                        <div class="mt-4 grid grid-cols-1 gap-6">
+                            <div>
+                                <label
+                                    for="currentPassword"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                >
+                                    {$_("profile.fields.currentPassword")}
+                                </label>
+                                <input
+                                    type="password"
+                                    id="currentPassword"
+                                    bind:value={formData.currentPassword}
+                                    class="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-white dark:ring-gray-600"
+                                />
+                            </div>
+
+                            <div>
+                                <label
+                                    for="newPassword"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                >
+                                    {$_("profile.fields.newPassword")}
+                                </label>
+                                <input
+                                    type="password"
+                                    id="newPassword"
+                                    bind:value={formData.newPassword}
+                                    class="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-white dark:ring-gray-600"
+                                />
+                            </div>
+
+                            <div>
+                                <label
+                                    for="confirmPassword"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                >
+                                    {$_("profile.fields.confirmPassword")}
+                                </label>
+                                <input
+                                    type="password"
+                                    id="confirmPassword"
+                                    bind:value={formData.confirmPassword}
+                                    class="mt-1 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-white dark:ring-gray-600"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end pt-6">
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {#if loading}
+                                <svg
+                                    class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <circle
+                                        class="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        stroke-width="4"
+                                    ></circle>
+                                    <path
+                                        class="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                </svg>
+                            {/if}
+                            {$_("profile.actions.save")}
+                        </button>
+                    </div>
+                </form>
             </div>
+        </div>
 
-            <div class="mt-5 md:mt-0 md:col-span-2">
-                <div class="shadow sm:rounded-md sm:overflow-hidden">
-                    <div class="px-4 py-5 bg-white space-y-6 sm:p-6">
-                        <!-- Avatar Section -->
-                        <div>
-                            <div class="flex items-center">
-                                <div
-                                    class="h-20 w-20 rounded-full bg-primary-600 flex items-center justify-center text-2xl font-bold text-white"
-                                >
-                                    {$user?.name?.[0]?.toUpperCase() ||
-                                        $user?.username?.[0]?.toUpperCase() ||
-                                        "U"}
-                                </div>
-                                <div class="ml-6">
-                                    <h2 class="text-xl font-bold text-gray-900">
-                                        {$user?.name || "No name set"}
-                                    </h2>
-                                    <p class="text-sm text-gray-500">
-                                        {$user?.username}
-                                    </p>
-                                </div>
-                            </div>
+        <!-- Profile Summary -->
+        <div class="space-y-6">
+            <div
+                class="rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5 dark:bg-gray-800 dark:ring-white/10"
+            >
+                <div class="p-6">
+                    <div class="flex items-center">
+                        <div
+                            class="h-16 w-16 rounded-full bg-primary-500 flex items-center justify-center text-2xl font-bold text-white"
+                        >
+                            {$user?.name?.[0]?.toUpperCase() ||
+                                $user?.username?.[0]?.toUpperCase() ||
+                                "U"}
                         </div>
-
-                        <!-- Account Info -->
-                        <div class="border-t border-gray-200 pt-6">
-                            <dl class="divide-y divide-gray-200">
-                                <div
-                                    class="py-4 sm:grid sm:grid-cols-3 sm:gap-4"
-                                >
-                                    <dt
-                                        class="text-sm font-medium text-gray-500"
-                                    >
-                                        {$_("auth.email")}
-                                    </dt>
-                                    <dd
-                                        class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"
-                                    >
-                                        {$user?.username}
-                                    </dd>
-                                </div>
-
-                                <div
-                                    class="py-4 sm:grid sm:grid-cols-3 sm:gap-4"
-                                >
-                                    <dt
-                                        class="text-sm font-medium text-gray-500"
-                                    >
-                                        {$_("profile.role")}
-                                    </dt>
-                                    <dd
-                                        class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"
-                                    >
-                                        <span
-                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize
-                                            {$user?.role === 'admin'
-                                                ? 'bg-purple-100 text-purple-800'
-                                                : 'bg-green-100 text-green-800'}"
-                                        >
-                                            {$user?.role}
-                                        </span>
-                                    </dd>
-                                </div>
-
-                                <div
-                                    class="py-4 sm:grid sm:grid-cols-3 sm:gap-4"
-                                >
-                                    <dt
-                                        class="text-sm font-medium text-gray-500"
-                                    >
-                                        {$_("profile.accountStatus")}
-                                    </dt>
-                                    <dd
-                                        class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"
-                                    >
-                                        <span
-                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                            {$user?.is_active
-                                                ? 'bg-green-100 text-green-800'
-                                                : 'bg-red-100 text-red-800'}"
-                                        >
-                                            {$user?.is_active
-                                                ? $_("profile.statusActive")
-                                                : $_("profile.statusInactive")}
-                                        </span>
-                                    </dd>
-                                </div>
-
-                                <div
-                                    class="py-4 sm:grid sm:grid-cols-3 sm:gap-4"
-                                >
-                                    <dt
-                                        class="text-sm font-medium text-gray-500"
-                                    >
-                                        {$_("profile.memberSince")}
-                                    </dt>
-                                    <dd
-                                        class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"
-                                    >
-                                        {new Date(
-                                            $user?.created_at || "",
-                                        ).toLocaleDateString()}
-                                    </dd>
-                                </div>
-
-                                {#if editMode}
-                                    <div class="py-4">
-                                        <form
-                                            on:submit={handleUpdateProfile}
-                                            class="space-y-4"
-                                        >
-                                            <div>
-                                                <label
-                                                    for="name"
-                                                    class="block text-sm font-medium text-gray-700"
-                                                >
-                                                    {$_("profile.name")}
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    id="name"
-                                                    bind:value={editedUser.name}
-                                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                                                />
-                                            </div>
-
-                                            <div class="flex items-center">
-                                                <button
-                                                    type="button"
-                                                    on:click={() =>
-                                                        (showPasswordFields =
-                                                            !showPasswordFields)}
-                                                    class="text-primary-600 hover:text-primary-500 text-sm font-medium"
-                                                >
-                                                    {showPasswordFields
-                                                        ? $_(
-                                                              "profile.cancelPasswordChange",
-                                                          )
-                                                        : $_(
-                                                              "profile.changePassword",
-                                                          )}
-                                                </button>
-                                            </div>
-
-                                            {#if showPasswordFields}
-                                                <div class="space-y-4">
-                                                    <div>
-                                                        <label
-                                                            for="current_password"
-                                                            class="block text-sm font-medium text-gray-700"
-                                                        >
-                                                            {$_(
-                                                                "profile.currentPassword",
-                                                            )}
-                                                        </label>
-                                                        <input
-                                                            type="password"
-                                                            id="current_password"
-                                                            bind:value={editedUser.current_password}
-                                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                                                        />
-                                                    </div>
-
-                                                    <div>
-                                                        <label
-                                                            for="new_password"
-                                                            class="block text-sm font-medium text-gray-700"
-                                                        >
-                                                            {$_(
-                                                                "profile.newPassword",
-                                                            )}
-                                                        </label>
-                                                        <input
-                                                            type="password"
-                                                            id="new_password"
-                                                            bind:value={editedUser.new_password}
-                                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                                                        />
-                                                    </div>
-
-                                                    <div>
-                                                        <label
-                                                            for="confirm_password"
-                                                            class="block text-sm font-medium text-gray-700"
-                                                        >
-                                                            {$_(
-                                                                "profile.confirmPassword",
-                                                            )}
-                                                        </label>
-                                                        <input
-                                                            type="password"
-                                                            id="confirm_password"
-                                                            bind:value={editedUser.confirm_password}
-                                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            {/if}
-
-                                            <div
-                                                class="flex justify-end space-x-3"
-                                            >
-                                                <button
-                                                    type="button"
-                                                    on:click={() =>
-                                                        (editMode = false)}
-                                                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                                                >
-                                                    {$_("common.cancel")}
-                                                </button>
-                                                <button
-                                                    type="submit"
-                                                    disabled={loading}
-                                                    class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
-                                                >
-                                                    {#if loading}
-                                                        <svg
-                                                            class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                                                            xmlns="http://www.w3.org/2000/svg"
-                                                            fill="none"
-                                                            viewBox="0 0 24 24"
-                                                        >
-                                                            <circle
-                                                                class="opacity-25"
-                                                                cx="12"
-                                                                cy="12"
-                                                                r="10"
-                                                                stroke="currentColor"
-                                                                stroke-width="4"
-                                                            ></circle>
-                                                            <path
-                                                                class="opacity-75"
-                                                                fill="currentColor"
-                                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                                            ></path>
-                                                        </svg>
-                                                        {$_("common.saving")}
-                                                    {:else}
-                                                        {$_(
-                                                            "common.saveChanges",
-                                                        )}
-                                                    {/if}
-                                                </button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                {:else}
-                                    <div class="py-4">
-                                        <button
-                                            on:click={() => {
-                                                editedUser.name =
-                                                    $user?.name || "";
-                                                editMode = true;
-                                            }}
-                                            class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                                        >
-                                            {$_("profile.editProfile")}
-                                        </button>
-                                    </div>
-                                {/if}
-                            </dl>
+                        <div class="ml-4">
+                            <h2
+                                class="text-lg font-medium text-gray-900 dark:text-white"
+                            >
+                                {$user?.name || $user?.username}
+                            </h2>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">
+                                {$user?.email}
+                            </p>
+                            <p
+                                class="text-sm text-gray-500 dark:text-gray-400 capitalize"
+                            >
+                                {$user?.role}
+                            </p>
                         </div>
                     </div>
                 </div>
-
-                {#if error}
-                    <div class="mt-4 rounded-md bg-red-50 p-4">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <svg
-                                    class="h-5 w-5 text-red-400"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 20 20"
-                                    fill="currentColor"
-                                >
-                                    <path
-                                        fill-rule="evenodd"
-                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                                        clip-rule="evenodd"
-                                    />
-                                </svg>
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm font-medium text-red-800">
-                                    {error}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                {/if}
-
-                {#if success}
-                    <div class="mt-4 rounded-md bg-green-50 p-4">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <svg
-                                    class="h-5 w-5 text-green-400"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 20 20"
-                                    fill="currentColor"
-                                >
-                                    <path
-                                        fill-rule="evenodd"
-                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                        clip-rule="evenodd"
-                                    />
-                                </svg>
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm font-medium text-green-800">
-                                    {success}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                {/if}
             </div>
         </div>
     </div>

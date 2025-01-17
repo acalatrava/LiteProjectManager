@@ -179,7 +179,7 @@ class ApiService {
         return data.results;
     }
 
-    async updateCurrentUser(data: Partial<User>): Promise<User> {
+    async updateProfile(data: Partial<User>): Promise<User> {
         const response = await fetch(`${API_URL}/api/v1/userinfo/`, {
             method: 'PATCH',
             headers: this.getHeaders(),
@@ -193,11 +193,50 @@ class ApiService {
         return response.json();
     }
 
-    async getProjects(): Promise<Project[]> {
-        const response = await fetch(`${API_URL}/api/v1/projects/`, {
+    private async get(path: string) {
+        const response = await fetch(`${API_URL}${path}`, {
             headers: this.getHeaders(),
         });
+        await this.handleResponse(response);
+        const data = await response.json();
+        return { data };
+    }
 
+    private async post(path: string, body: any) {
+        const response = await fetch(`${API_URL}${path}`, {
+            method: 'POST',
+            headers: this.getHeaders(),
+            body: JSON.stringify(body),
+        });
+        await this.handleResponse(response);
+        const data = await response.json();
+        return { data };
+    }
+
+    private async put(path: string, body: any) {
+        const response = await fetch(`${API_URL}${path}`, {
+            method: 'PUT',
+            headers: this.getHeaders(),
+            body: JSON.stringify(body),
+        });
+        await this.handleResponse(response);
+        const data = await response.json();
+        return { data };
+    }
+
+    private async delete(path: string) {
+        const response = await fetch(`${API_URL}${path}`, {
+            method: 'DELETE',
+            headers: this.getHeaders(),
+        });
+        await this.handleResponse(response);
+        return { data: null };
+    }
+
+    async getProjects(): Promise<Project[]> {
+        const response = await fetch(`${API_URL}/api/v1/projects?include_tasks=true&include_members=true`, {
+            headers: this.getHeaders(),
+        });
         await this.handleResponse(response);
         return response.json();
     }

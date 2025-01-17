@@ -1,31 +1,43 @@
 <script lang="ts">
     import { page } from "$app/stores";
-    import { goto } from "$app/navigation";
-    import { onMount } from "svelte";
+    import { onMount, afterUpdate } from "svelte";
     import { api } from "$lib/services/api";
     import type { Task, Comment, User } from "$lib/types/project";
     import { _ } from "svelte-i18n";
+    import { fade, fly } from "svelte/transition";
+    import { Functions } from "$lib/services/functions";
 
     const projectId = $page.params.projectId;
-    const taskId = $page.params.taskId;
+    let taskId = $page.params.taskId;
+
+    let projectMembers: (ProjectMember & { user?: User })[] = [];
 
     let task: Task | null = null;
+    let parentTask: Task | null = null;
     let comments: (Comment & { user?: User })[] = [];
     let users: User[] = [];
     let loading = true;
     let error = "";
     let newComment = "";
-    let showStatusMenu = false;
-    let showCreateSubtaskModal = false;
-    let newSubtask = {
+    let showCreateTaskModal = false;
+    let newTask = {
         name: "",
         description: "",
+        parent_task_id: taskId,
         start_date: new Date().toISOString().split("T")[0],
         deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
             .toISOString()
             .split("T")[0],
         assigned_to_id: "",
+        project_id: projectId,
     };
+    let availableUsers: User[] = [];
+
+    // Watch for route parameter changes
+    $: if ($page.params.taskId !== taskId) {
+        taskId = $page.params.taskId;
+        loadTaskData(); // Reload data when taskId changes
+    }
 
     onMount(async () => {
         await loadTaskData();
@@ -35,587 +47,698 @@
         loading = true;
         error = "";
         try {
-            const [taskData, commentsData, usersData] = await Promise.all([
-                api.getTask(taskId),
-                api.getTaskComments(taskId),
-                api.getUsers(),
-            ]);
+            const [taskData, commentsData, usersData, membersData] =
+                await Promise.all([
+                    api.getTask(taskId),
+                    api.getTaskComments(taskId),
+                    api.getUsers(),
+                    api.getProjectMembers(projectId),
+                ]);
+
             task = taskData;
-            comments = commentsData.map((comment) => ({
-                ...comment,
-                user: usersData.find((u) => u.id === comment.user_id),
-            }));
+
+            if (task.parent_task_id) {
+                parentTask = await api.getTask(task.parent_task_id);
+            } else {
+                parentTask = null; // Reset parent task if this is a parent task
+            }
+
+            comments = commentsData;
             users = usersData;
-        } catch (err: any) {
-            const errorMessage = err.message || "Failed to load task data";
+
+            // Combine member data with user data
+            projectMembers = membersData.map((member) => ({
+                ...member,
+                user: usersData.find((u) => u.id === member.user_id),
+            }));
+
+            // Filter out users that are already members
+            availableUsers = usersData.filter(
+                (user) =>
+                    !projectMembers.some(
+                        (member) => member.user_id === user.id,
+                    ),
+            );
+        } catch (err) {
+            error = "Failed to load task data";
             console.error(err);
-            alert(errorMessage);
         } finally {
             loading = false;
+        }
+    }
+
+    async function handleStatusChange(newStatus: string) {
+        if (!task) return;
+
+        try {
+            await api.updateTaskStatus(taskId, newStatus);
+            task.status = newStatus;
+        } catch (err) {
+            error = "Failed to update task status";
+            console.error(err);
         }
     }
 
     async function handleAddComment() {
         if (!newComment.trim()) return;
 
-        error = "";
         try {
-            await api.createComment({
+            const comment = await api.createComment({
                 task_id: taskId,
                 content: newComment.trim(),
             });
+            comments = [...comments, comment];
             newComment = "";
-            await loadTaskData();
-        } catch (err: any) {
-            const errorMessage = err.message || "Failed to add comment";
+        } catch (err) {
+            error = "Failed to add comment";
             console.error(err);
-            alert(errorMessage);
-        }
-    }
-
-    async function handleStatusChange(
-        newStatus: "pending" | "in_progress" | "completed",
-    ) {
-        try {
-            await api.updateTask(taskId, { status: newStatus });
-            showStatusMenu = false;
-            await loadTaskData();
-        } catch (err: any) {
-            let errorMessage = "Failed to update task status";
-            // dump err keys
-            if (err) {
-                errorMessage = err;
-            }
-            console.error(err);
-            alert(errorMessage);
-        }
-    }
-
-    function getStatusColor(status: string) {
-        switch (status) {
-            case "pending":
-                return "bg-yellow-100 text-yellow-800";
-            case "in_progress":
-                return "bg-blue-100 text-blue-800";
-            case "completed":
-                return "bg-green-100 text-green-800";
-            default:
-                return "bg-gray-100 text-gray-800";
-        }
-    }
-
-    function getTaskRowClass(task: Task) {
-        if (task.status === "completed") return "bg-green-100";
-
-        const deadline = new Date(task.deadline);
-        const now = new Date();
-        const oneWeek = 7 * 24 * 60 * 60 * 1000;
-
-        if (deadline < now) {
-            return "bg-red-200";
-        } else if (deadline.getTime() - now.getTime() < oneWeek) {
-            return "bg-orange-100";
-        }
-
-        return "bg-blue-100";
-    }
-
-    async function handleDeleteTask(taskId: string) {
-        if (!confirm($_("common.confirmDelete"))) return;
-
-        try {
-            await api.deleteTask(taskId);
-            await loadTaskData();
-        } catch (err: any) {
-            let errorMessage = $_("projects.errors.deleteFailed");
-            if (err.response?.data) {
-                const serverError =
-                    typeof err.response.data === "string"
-                        ? err.response.data
-                        : err.response.data.detail;
-                errorMessage = `${errorMessage}: ${serverError}`;
-            }
-            console.error(err);
-            alert(errorMessage);
         }
     }
 
     async function handleCreateSubtask() {
-        if (!task) return;
-
         try {
-            const taskData = {
+            await api.createSubtask(taskId, {
                 ...newSubtask,
                 project_id: projectId,
-            };
-
-            await api.createSubtask(taskId, taskData);
-            showCreateSubtaskModal = false;
+                start_date: new Date(newSubtask.start_date).toISOString(),
+                deadline: new Date(newSubtask.deadline).toISOString(),
+            });
+            showCreateTaskModal = false;
             await loadTaskData();
-
-            // Reset form
-            newSubtask = {
-                name: "",
-                description: "",
-                start_date: new Date().toISOString().split("T")[0],
-                deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-                    .toISOString()
-                    .split("T")[0],
-                assigned_to_id: "",
-            };
-        } catch (err: any) {
-            let errorMessage = $_("projects.errors.createFailed");
-            if (err.response?.data) {
-                const serverError =
-                    typeof err.response.data === "string"
-                        ? err.response.data
-                        : err.response.data.detail;
-                errorMessage = `${errorMessage}: ${serverError}`;
-            }
+        } catch (err) {
+            error = "Failed to create subtask";
             console.error(err);
-            alert(errorMessage);
         }
+    }
+
+    function getBackUrl() {
+        if (task?.parent_task_id) {
+            return `/projects/${projectId}/tasks/${task.parent_task_id}`;
+        }
+        return `/projects/${projectId}`;
     }
 </script>
 
-{#if loading}
-    <div class="flex justify-center items-center h-64">
+<div class="space-y-8">
+    {#if loading}
+        <div class="flex justify-center py-12" transition:fade>
+            <div class="relative">
+                <div
+                    class="h-12 w-12 rounded-full border-4 border-primary-200 border-t-primary-600 animate-spin"
+                ></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <div class="h-6 w-6 rounded-full bg-primary-100"></div>
+                </div>
+            </div>
+        </div>
+    {:else if task}
+        <!-- Task Header -->
         <div
-            class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"
-        />
-    </div>
-{:else if error}
-    <div class="bg-red-50 p-4 rounded-md">
-        <div class="flex">
-            <div class="flex-shrink-0">
-                <svg
-                    class="h-5 w-5 text-red-400"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                >
-                    <path
-                        fill-rule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                        clip-rule="evenodd"
-                    />
-                </svg>
-            </div>
-            <div class="ml-3">
-                <h3 class="text-sm font-medium text-red-800">{error}</h3>
-            </div>
-        </div>
-    </div>
-{:else if task}
-    <div class="max-w-4xl mx-auto py-6">
-        <div class="mb-6">
-            <button
-                on:click={() => {
-                    window.location.href = task.parent_task_id
-                        ? `/projects/${projectId}/tasks/${task.parent_task_id}`
-                        : `/projects/${projectId}`;
-                }}
-                class="text-primary-600 hover:text-primary-900 text-left"
-            >
-                ← {$_("common.back")}
-            </button>
-        </div>
-
-        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-            <div class="px-4 py-5 sm:px-6">
-                <div class="flex justify-between items-start">
+            class="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary-600 to-primary-800 p-8 shadow-lg"
+        >
+            <div class="absolute inset-0 bg-grid-white/10"></div>
+            <div class="relative">
+                <div class="flex items-center justify-between">
                     <div>
-                        <h3 class="text-lg leading-6 font-medium text-gray-900">
-                            {task.name}
-                        </h3>
-                        <p class="mt-1 max-w-2xl text-sm text-gray-500">
-                            {task.description}
+                        <div class="flex items-center space-x-4">
+                            <a
+                                href={getBackUrl()}
+                                class="text-primary-100 hover:text-white transition-colors"
+                            >
+                                <svg
+                                    class="h-6 w-6"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                                    />
+                                </svg>
+                            </a>
+                            <div>
+                                {#if task?.parent_task_id}
+                                    <div class="text-primary-100 text-sm mb-1">
+                                        {parentTask?.name || $_("common.tasks")}
+                                    </div>
+                                {/if}
+                                <h1 class="text-3xl font-bold text-white">
+                                    {task?.name}
+                                </h1>
+                            </div>
+                        </div>
+                        <p class="mt-2 text-lg text-primary-100">
+                            {task?.description}
                         </p>
                     </div>
-                    <div class="relative">
-                        <button
-                            on:click={() => (showStatusMenu = !showStatusMenu)}
-                            class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                    <div class="flex items-center space-x-4">
+                        <select
+                            bind:value={task.status}
+                            on:change={(e) =>
+                                handleStatusChange(e.target.value)}
+                            class="rounded-lg bg-white/10 backdrop-blur-sm px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-primary-600"
                         >
-                            <span
-                                class={`mr-2 inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${getStatusColor(task.status)}`}
+                            <option value="pending"
+                                >{$_("common.taskStatus.pending")}</option
                             >
-                                {task.status}
-                            </span>
+                            <option value="in_progress"
+                                >{$_("common.taskStatus.inProgress")}</option
+                            >
+                            <option value="completed"
+                                >{$_("common.taskStatus.completed")}</option
+                            >
+                        </select>
+                        <button
+                            on:click={() => (showCreateTaskModal = true)}
+                            class="inline-flex items-center rounded-lg bg-white px-4 py-2 text-sm font-semibold text-primary-600 shadow-sm hover:bg-primary-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-all duration-200"
+                        >
                             <svg
-                                class="h-5 w-5 text-gray-400"
+                                class="mr-2 -ml-1 h-5 w-5"
                                 xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
                             >
                                 <path
-                                    fill-rule="evenodd"
-                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                    clip-rule="evenodd"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M12 4v16m8-8H4"
                                 />
                             </svg>
+                            {$_("common.addSubtask")}
                         </button>
-                        {#if showStatusMenu}
-                            <div
-                                class="origin-top-right absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
-                            >
-                                <div class="py-1" role="menu">
-                                    <button
-                                        on:click={() =>
-                                            handleStatusChange("pending")}
-                                        class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    </div>
+                </div>
+
+                <!-- Task Metadata -->
+                <div
+                    class="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4"
+                >
+                    <div class="rounded-lg bg-white/10 backdrop-blur-sm p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <svg
+                                    class="h-6 w-6 text-white"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                    />
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-sm font-medium text-white">
+                                    {$_("common.taskStartDate")}
+                                </h3>
+                                <p
+                                    class="mt-1 text-lg font-semibold text-white"
+                                >
+                                    {new Date(
+                                        task.start_date,
+                                    ).toLocaleDateString()}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rounded-lg bg-white/10 backdrop-blur-sm p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <svg
+                                    class="h-6 w-6 text-white"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-sm font-medium text-white">
+                                    {$_("common.taskDeadline")}
+                                </h3>
+                                <p
+                                    class="mt-1 text-lg font-semibold text-white"
+                                >
+                                    {new Date(
+                                        task.deadline,
+                                    ).toLocaleDateString()}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rounded-lg bg-white/10 backdrop-blur-sm p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <svg
+                                    class="h-6 w-6 text-white"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                    />
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-sm font-medium text-white">
+                                    {$_("common.taskAssignTo")}
+                                </h3>
+                                <div class="mt-1">
+                                    <select
+                                        bind:value={task.assigned_to_id}
+                                        on:change={async (e) => {
+                                            try {
+                                                await api.updateTask(task.id, {
+                                                    assigned_to_id:
+                                                        e.target.value || null,
+                                                });
+                                                await loadTaskData();
+                                            } catch (err) {
+                                                console.error(err);
+                                            }
+                                        }}
+                                        class="w-full rounded-md bg-white/10 backdrop-blur-sm px-3 py-1.5 text-base font-semibold text-white shadow-sm hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-primary-600"
                                     >
-                                        Pending
-                                    </button>
-                                    <button
-                                        on:click={() =>
-                                            handleStatusChange("in_progress")}
-                                        class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                    >
-                                        In Progress
-                                    </button>
-                                    <button
-                                        on:click={() =>
-                                            handleStatusChange("completed")}
-                                        class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                    >
-                                        Completed
-                                    </button>
+                                        <option value=""
+                                            >{$_(
+                                                "common.taskUnassigned",
+                                            )}</option
+                                        >
+                                        {#each projectMembers as member}
+                                            <option
+                                                value={member.user_id}
+                                                selected={member.user_id ===
+                                                    task.assigned_to_id}
+                                            >
+                                                {member.user?.name ||
+                                                    member.user?.username ||
+                                                    $_("common.unknownUser")}
+                                            </option>
+                                        {/each}
+                                    </select>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <div class="rounded-lg bg-white/10 backdrop-blur-sm p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <svg
+                                    class="h-6 w-6 text-white"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+                                    />
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-sm font-medium text-white">
+                                    Comments
+                                </h3>
+                                <p
+                                    class="mt-1 text-lg font-semibold text-white"
+                                >
+                                    {comments.length}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+            <!-- Subtasks List -->
+            <div class="lg:col-span-2 space-y-6">
+                <div
+                    class="rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5 dark:bg-gray-800 dark:ring-white/10"
+                >
+                    <div class="p-6">
+                        <h2
+                            class="text-base font-semibold leading-7 text-gray-900 dark:text-white"
+                        >
+                            {$_("common.subtasks")}
+                        </h2>
+                        {#if task.subtasks?.length}
+                            <div class="mt-6 flow-root">
+                                <ul
+                                    class="divide-y divide-gray-100 dark:divide-gray-700"
+                                >
+                                    {#each task.subtasks as task (task.id)}
+                                        <li
+                                            class="relative py-5 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                                        >
+                                            <div class="px-4 sm:px-6">
+                                                <div
+                                                    class="flex items-center justify-between"
+                                                >
+                                                    <a
+                                                        href="/projects/{projectId}/tasks/{task.id}"
+                                                        class="text-sm font-medium text-gray-900 hover:text-primary-600 dark:text-white dark:hover:text-primary-400"
+                                                    >
+                                                        {task.name}
+                                                    </a>
+                                                    <div
+                                                        class="flex items-center space-x-4"
+                                                    >
+                                                        <!-- Assigned User Avatar -->
+                                                        {#if task.assigned_to_id}
+                                                            <div
+                                                                class="flex items-center"
+                                                            >
+                                                                <div
+                                                                    class="h-6 w-6 rounded-full bg-primary-500 flex items-center justify-center"
+                                                                >
+                                                                    <span
+                                                                        class="text-xs font-medium text-white"
+                                                                    >
+                                                                        {users
+                                                                            .find(
+                                                                                (
+                                                                                    u,
+                                                                                ) =>
+                                                                                    u.id ===
+                                                                                    task.assigned_to_id,
+                                                                            )
+                                                                            ?.name?.[0]?.toUpperCase() ||
+                                                                            "U"}
+                                                                    </span>
+                                                                </div>
+                                                                <span
+                                                                    class="ml-2 text-sm text-gray-500 dark:text-gray-400"
+                                                                >
+                                                                    {users.find(
+                                                                        (u) =>
+                                                                            u.id ===
+                                                                            task.assigned_to_id,
+                                                                    )?.name ||
+                                                                        "Unknown"}
+                                                                </span>
+                                                            </div>
+                                                        {/if}
+                                                        <!-- Task status badge -->
+                                                        <span
+                                                            class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {Functions.getStatusColor(
+                                                                task.status,
+                                                            )}"
+                                                        >
+                                                            {task.status}
+                                                        </span>
+                                                        <!-- Delete button -->
+                                                        <button
+                                                            on:click|preventDefault={async () => {
+                                                                if (
+                                                                    confirm(
+                                                                        "Are you sure you want to delete this task?",
+                                                                    )
+                                                                ) {
+                                                                    try {
+                                                                        await api.deleteTask(
+                                                                            task.id,
+                                                                        );
+                                                                        await loadProjectData();
+                                                                    } catch (err) {
+                                                                        console.error(
+                                                                            err,
+                                                                        );
+                                                                    }
+                                                                }
+                                                            }}
+                                                            class="text-gray-400 hover:text-red-600 dark:text-gray-500 dark:hover:text-red-400"
+                                                        >
+                                                            <svg
+                                                                xmlns="http://www.w3.org/2000/svg"
+                                                                class="h-5 w-5"
+                                                                fill="none"
+                                                                viewBox="0 0 24 24"
+                                                                stroke="currentColor"
+                                                            >
+                                                                <path
+                                                                    stroke-linecap="round"
+                                                                    stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                                                />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div class="mt-2">
+                                                    <p
+                                                        class="text-sm text-gray-600 line-clamp-2 dark:text-gray-300"
+                                                    >
+                                                        {task.description}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    {/each}
+                                </ul>
+                            </div>
+                        {:else}
+                            <p
+                                class="mt-4 text-sm text-gray-500 dark:text-gray-400"
+                            >
+                                {$_("common.noSubtasks")}
+                            </p>
                         {/if}
                     </div>
                 </div>
             </div>
 
-            <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
-                <div class="space-y-8">
-                    <!-- Comments List -->
-                    <div class="space-y-4">
-                        {#each comments as comment}
-                            <div class="bg-gray-50 rounded-lg p-4">
-                                <div class="flex space-x-3">
-                                    <div class="flex-shrink-0">
-                                        <div
-                                            class="h-10 w-10 rounded-full bg-primary-600 flex items-center justify-center text-white"
-                                        >
-                                            {comment.user?.name?.[0]?.toUpperCase() ||
-                                                comment.user?.username?.[0]?.toUpperCase() ||
-                                                "U"}
-                                        </div>
-                                    </div>
-                                    <div class="flex-1 space-y-1">
-                                        <div
-                                            class="flex items-center justify-between"
-                                        >
-                                            <h3
-                                                class="text-sm font-medium text-gray-900"
-                                            >
-                                                {comment.user?.name ||
-                                                    comment.user?.username ||
-                                                    "Unknown User"}
-                                            </h3>
-                                            <p class="text-sm text-gray-500">
-                                                {new Date(
-                                                    comment.created_at,
-                                                ).toLocaleString()}
-                                            </p>
-                                        </div>
-                                        <p class="text-sm text-gray-500">
-                                            {comment.content}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        {/each}
-                    </div>
-
-                    <!-- Add Comment Form -->
-                    <div class="mt-6">
-                        <form on:submit|preventDefault={handleAddComment}>
-                            <div>
-                                <label for="comment" class="sr-only"
-                                    >Add your comment</label
-                                >
-                                <textarea
-                                    id="comment"
-                                    name="comment"
-                                    rows="3"
-                                    bind:value={newComment}
-                                    class="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                    placeholder="Add a comment..."
-                                ></textarea>
-                            </div>
-                            <div class="mt-3 flex justify-end">
-                                <button
-                                    type="submit"
-                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                                >
-                                    Comment
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Subtasks Section -->
-        <div class="mt-8">
-            <div class="sm:flex sm:items-center">
-                <div class="sm:flex-auto">
-                    <h2 class="text-xl font-semibold text-gray-900">
-                        {$_("common.subtasks")}
-                    </h2>
-                </div>
-                <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-                    <button
-                        type="button"
-                        class="block rounded-md bg-primary-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
-                        on:click={() => (showCreateSubtaskModal = true)}
-                    >
-                        {$_("common.addSubtask")}
-                    </button>
-                </div>
-            </div>
-
-            {#if task.subtasks?.length}
-                <div class="mt-4">
-                    <div
-                        class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg"
-                    >
-                        <table class="min-w-full divide-y divide-gray-300">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th
-                                        scope="col"
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                    >
-                                        {$_("common.taskName")}
-                                    </th>
-                                    <th
-                                        scope="col"
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                    >
-                                        {$_("projects.fields.status")}
-                                    </th>
-                                    <th
-                                        scope="col"
-                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                    >
-                                        {$_("projects.fields.deadline")}
-                                    </th>
-                                    <th scope="col" class="relative px-6 py-3">
-                                        <span class="sr-only"
-                                            >{$_("common.actions")}</span
-                                        >
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200 bg-white">
-                                {#each task.subtasks as subtask}
-                                    <tr class={getTaskRowClass(subtask)}>
-                                        <td
-                                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                                        >
-                                            <button
-                                                on:click={async () => {
-                                                    window.location.href = `/projects/${projectId}/tasks/${subtask.id}`;
-                                                }}
-                                                class="text-primary-600 hover:text-primary-900 text-left"
-                                            >
-                                                {subtask.name}
-                                            </button>
-                                        </td>
-                                        <td
-                                            class="px-6 py-4 whitespace-nowrap text-sm"
-                                        >
-                                            <span
-                                                class="inline-flex rounded-full px-2 text-xs font-semibold leading-5 {getStatusColor(
-                                                    subtask.status,
-                                                )}"
-                                            >
-                                                {subtask.status}
-                                            </span>
-                                        </td>
-                                        <td
-                                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
-                                        >
-                                            {new Date(
-                                                subtask.deadline,
-                                            ).toLocaleDateString()}
-                                        </td>
-                                        <td
-                                            class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
-                                        >
-                                            <button
-                                                on:click={() =>
-                                                    handleDeleteTask(
-                                                        subtask.id,
-                                                    )}
-                                                class="text-red-600 hover:text-red-900"
-                                            >
-                                                {$_("common.remove")}
-                                            </button>
-                                        </td>
-                                    </tr>
-                                {/each}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            {:else}
-                <p class="mt-4 text-gray-500">{$_("common.noSubtasks")}</p>
-            {/if}
-        </div>
-    </div>
-{/if}
-
-<!-- Create Subtask Modal -->
-{#if showCreateSubtaskModal}
-    <div
-        class="fixed z-10 inset-0 overflow-y-auto"
-        aria-labelledby="modal-title"
-        role="dialog"
-        aria-modal="true"
-    >
-        <div
-            class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
-        >
-            <!-- Background overlay -->
-            <div
-                class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-                aria-hidden="true"
-                on:click={() => (showCreateSubtaskModal = false)}
-            />
-
-            <!-- Modal panel -->
-            <div
-                class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6"
-            >
-                <form on:submit|preventDefault={handleCreateSubtask}>
-                    <div>
-                        <h3
-                            class="text-lg leading-6 font-medium text-gray-900"
-                            id="modal-title"
+            <!-- Comments Section -->
+            <div class="space-y-6">
+                <div
+                    class="rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5 dark:bg-gray-800 dark:ring-white/10"
+                >
+                    <div class="p-6">
+                        <h2
+                            class="text-base font-semibold leading-7 text-gray-900 dark:text-white"
                         >
-                            {$_("common.addSubtask")}
-                        </h3>
-
-                        <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4">
-                            <div>
-                                <label
-                                    for="name"
-                                    class="block text-sm font-medium text-gray-700"
-                                >
-                                    {$_("common.taskName")}
-                                </label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    id="name"
-                                    required
-                                    bind:value={newSubtask.name}
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                                />
-                            </div>
-
-                            <div>
-                                <label
-                                    for="description"
-                                    class="block text-sm font-medium text-gray-700"
-                                >
-                                    {$_("common.taskDescription")}
-                                </label>
+                            Comments
+                        </h2>
+                        <div class="mt-6">
+                            <!-- Comment Input -->
+                            <div class="mb-6">
                                 <textarea
-                                    id="description"
-                                    name="description"
+                                    bind:value={newComment}
+                                    placeholder="Add a comment..."
                                     rows="3"
-                                    bind:value={newSubtask.description}
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                                />
-                            </div>
-
-                            <div
-                                class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2"
-                            >
-                                <div>
-                                    <label
-                                        for="start_date"
-                                        class="block text-sm font-medium text-gray-700"
+                                    class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-white dark:ring-gray-600"
+                                ></textarea>
+                                <div class="mt-2 flex justify-end">
+                                    <button
+                                        on:click={handleAddComment}
+                                        class="inline-flex items-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
                                     >
-                                        {$_("common.taskStartDate")}
-                                    </label>
-                                    <input
-                                        type="date"
-                                        name="start_date"
-                                        id="start_date"
-                                        required
-                                        bind:value={newSubtask.start_date}
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label
-                                        for="deadline"
-                                        class="block text-sm font-medium text-gray-700"
-                                    >
-                                        {$_("common.taskDeadline")}
-                                    </label>
-                                    <input
-                                        type="date"
-                                        name="deadline"
-                                        id="deadline"
-                                        required
-                                        bind:value={newSubtask.deadline}
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                                    />
+                                        Add Comment
+                                    </button>
                                 </div>
                             </div>
 
-                            <div>
-                                <label
-                                    for="assigned_to"
-                                    class="block text-sm font-medium text-gray-700"
-                                >
-                                    {$_("common.taskAssignTo")}
-                                </label>
-                                <select
-                                    id="assigned_to"
-                                    name="assigned_to"
-                                    bind:value={newSubtask.assigned_to_id}
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                                >
-                                    <option value="">
-                                        {$_("common.taskUnassigned")}
-                                    </option>
-                                    {#each users as user}
-                                        <option value={user.id}>
-                                            {user.name || user.username}
-                                        </option>
-                                    {/each}
-                                </select>
-                            </div>
+                            <!-- Comments List -->
+                            <ul class="space-y-6">
+                                {#each comments as comment (comment.id)}
+                                    <li class="relative">
+                                        <div class="flex gap-4">
+                                            <div class="flex-shrink-0">
+                                                <div
+                                                    class="h-10 w-10 rounded-full bg-primary-500 flex items-center justify-center"
+                                                >
+                                                    <span
+                                                        class="text-sm font-medium text-white"
+                                                    >
+                                                        {comment.user?.name?.[0]?.toUpperCase() ||
+                                                            "U"}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow">
+                                                <div
+                                                    class="flex items-center justify-between"
+                                                >
+                                                    <p
+                                                        class="text-sm font-medium text-gray-900 dark:text-white"
+                                                    >
+                                                        {comment.user?.name ||
+                                                            comment.user
+                                                                ?.username ||
+                                                            "Unknown User"}
+                                                    </p>
+                                                    <p
+                                                        class="text-xs text-gray-500 dark:text-gray-400"
+                                                    >
+                                                        {new Date(
+                                                            comment.created_at,
+                                                        ).toLocaleString()}
+                                                    </p>
+                                                </div>
+                                                <p
+                                                    class="mt-1 text-sm text-gray-600 dark:text-gray-300"
+                                                >
+                                                    {comment.content}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </li>
+                                {/each}
+                            </ul>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    {/if}
+</div>
 
-                    <div
-                        class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense"
-                    >
-                        <button
-                            type="submit"
-                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:col-start-2 sm:text-sm"
+<!-- Create Subtask Modal -->
+{#if showCreateTaskModal}
+    <div
+        class="fixed inset-0 z-50 overflow-y-auto backdrop-blur-sm bg-gray-500/30 dark:bg-gray-900/30"
+        transition:fade
+        on:click|self={() => (showCreateTaskModal = false)}
+    >
+        <div class="flex min-h-screen items-center justify-center p-4">
+            <div
+                class="relative w-full max-w-2xl rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800"
+                transition:fly={{ y: 20 }}
+            >
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    {$_("common.addSubtask")}
+                </h3>
+                <form
+                    class="mt-4 space-y-4"
+                    on:submit|preventDefault={async () => {
+                        try {
+                            await api.createTask(newTask);
+                            showCreateTaskModal = false;
+                            await loadTaskData();
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    }}
+                >
+                    <div>
+                        <label
+                            for="task-name"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                            >{$_("common.taskName")}</label
                         >
-                            {$_("common.create")}
-                        </button>
+                        <input
+                            type="text"
+                            id="task-name"
+                            bind:value={newTask.name}
+                            required
+                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700"
+                        />
+                    </div>
+                    <div>
+                        <label
+                            for="task-description"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                            >{$_("common.taskDescription")}</label
+                        >
+                        <textarea
+                            id="task-description"
+                            bind:value={newTask.description}
+                            rows="3"
+                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700"
+                        />
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label
+                                for="start-date"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                                >Start Date</label
+                            >
+                            <input
+                                type="date"
+                                id="start-date"
+                                bind:value={newTask.start_date}
+                                required
+                                class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700"
+                            />
+                        </div>
+                        <div>
+                            <label
+                                for="deadline"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                                >Deadline</label
+                            >
+                            <input
+                                type="date"
+                                id="deadline"
+                                bind:value={newTask.deadline}
+                                required
+                                class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700"
+                            />
+                        </div>
+                    </div>
+                    <div>
+                        <label
+                            for="assigned-to"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-200"
+                            >Assign To</label
+                        >
+                        <select
+                            id="assigned-to"
+                            bind:value={newTask.assigned_to_id}
+                            class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700"
+                        >
+                            <option value="">Select team member</option>
+                            {#each projectMembers as member}
+                                <option value={member.user_id}>
+                                    {member.user?.name || member.user?.username}
+                                </option>
+                            {/each}
+                        </select>
+                    </div>
+                    <div class="mt-6 flex justify-end space-x-3">
                         <button
                             type="button"
-                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:col-start-1 sm:text-sm"
-                            on:click={() => (showCreateSubtaskModal = false)}
+                            on:click={() => (showCreateTaskModal = false)}
+                            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200"
+                            >{$_("common.cancel")}</button
                         >
-                            {$_("common.cancel")}
-                        </button>
+                        <button
+                            type="submit"
+                            class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+                            >{$_("common.create")}</button
+                        >
                     </div>
                 </form>
             </div>

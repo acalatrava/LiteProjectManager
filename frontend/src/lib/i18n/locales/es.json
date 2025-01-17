@@ -28,7 +28,11 @@
         "taskStartDate": "Fecha de Inicio",
         "taskDeadline": "Fecha Límite",
         "taskAssignTo": "Asignar a",
-        "taskStatus": "Estado",
+        "taskStatus": {
+            "pending": "Pendiente",
+            "inProgress": "En Progreso",
+            "completed": "Completado"
+        },
         "taskUnassigned": "Sin asignar",
         "create": "Crear",
         "remove": "Eliminar",
@@ -43,7 +47,8 @@
         "user": "Usuario",
         "unknownUser": "Usuario Desconocido",
         "actions": "Acciones",
-        "confirmDelete": "¿Está seguro de que desea eliminar esta tarea?"
+        "confirmDelete": "¿Está seguro de que desea eliminar?",
+        "viewDetails": "Ver detalles"
     },
     "auth": {
         "loginTitle": "Iniciar sesión en su cuenta",
@@ -138,27 +143,30 @@
         }
     },
     "profile": {
-        "title": "Perfil",
-        "personalInfo": "Su información de cuenta y configuración",
-        "updateProfile": "Actualizar Perfil",
-        "name": "Nombre",
-        "role": "Rol",
-        "accountStatus": "Estado de la cuenta",
-        "statusActive": "Activa",
-        "statusInactive": "Inactiva",
-        "memberSince": "Miembro desde",
-        "editProfile": "Editar Perfil",
-        "updateSuccess": "Perfil actualizado exitosamente",
-        "updateError": "Error al actualizar el perfil",
-        "currentPassword": "Contraseña Actual",
-        "newPassword": "Nueva Contraseña",
-        "confirmPassword": "Confirmar Nueva Contraseña",
-        "changePassword": "Cambiar Contraseña",
-        "cancelPasswordChange": "Cancelar Cambio de Contraseña",
-        "currentPasswordRequired": "La contraseña actual es requerida",
-        "passwordsDoNotMatch": "Las nuevas contraseñas no coinciden",
-        "passwordTooShort": "La nueva contraseña debe tener al menos 8 caracteres",
-        "incorrectPassword": "La contraseña actual es incorrecta"
+        "title": "Ajustes de Perfil",
+        "description": "Gestiona tu información personal y contraseña",
+        "sections": {
+            "basicInfo": "Información Básica",
+            "changePassword": "Cambiar Contraseña"
+        },
+        "fields": {
+            "name": "Nombre Completo",
+            "email": "Correo Electrónico",
+            "currentPassword": "Contraseña Actual",
+            "newPassword": "Nueva Contraseña",
+            "confirmPassword": "Confirmar Nueva Contraseña"
+        },
+        "actions": {
+            "save": "Guardar Cambios"
+        },
+        "errors": {
+            "passwordMismatch": "Las contraseñas no coinciden",
+            "currentPasswordRequired": "Se requiere la contraseña actual para cambiar la contraseña",
+            "updateFailed": "Error al actualizar el perfil"
+        },
+        "success": {
+            "profileUpdated": "Perfil actualizado correctamente"
+        }
     },
     "errors": {
         "required": "Este campo es requerido",
@@ -205,7 +213,8 @@
     "projects": {
         "description": "Una lista de todos los proyectos incluyendo su nombre, estado y otros detalles.",
         "createProject": "Crear Proyecto",
-        "confirmDelete": "¿Está seguro de que desea eliminar este proyecto?",
+        "confirmDeleteProject": "¿Está seguro de que desea eliminar este proyecto?",
+        "confirmDeleteTask": "¿Está seguro de que desea eliminar esta tarea?",
         "fields": {
             "name": "Nombre",
             "description": "Descripción",

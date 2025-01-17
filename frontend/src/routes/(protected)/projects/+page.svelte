@@ -3,6 +3,9 @@
     import { api } from "$lib/services/api";
     import type { Project } from "$lib/types/project";
     import { _ } from "svelte-i18n";
+    import { fade, fly } from "svelte/transition";
+    import { Functions } from "$lib/services/functions";
+    import { user } from "$lib/stores/auth";
 
     let projects: Project[] = [];
     let loading = true;
@@ -34,32 +37,27 @@
         }
     }
 
-    async function handleCreateProject() {
-        error = "";
-        try {
-            await api.createProject({
-                ...newProject,
-                start_date: new Date(newProject.start_date).toISOString(),
-                deadline: new Date(newProject.deadline).toISOString(),
-            });
-            showCreateModal = false;
-            await loadProjects();
-            newProject = {
-                name: "",
-                description: "",
-                start_date: new Date().toISOString().split("T")[0],
-                deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-                    .toISOString()
-                    .split("T")[0],
-            };
-        } catch (err) {
-            error = "Failed to create project";
-            console.error(err);
-        }
+    function getProgressColor(project: Project) {
+        const progress = getProgress(project);
+
+        if (progress >= 100) return "bg-emerald-500";
+        if (progress >= 70) return "bg-lime-500";
+        if (progress >= 30) return "bg-amber-500";
+        return "bg-rose-500";
+    }
+
+    function getProgress(project: Project) {
+        if (!project?.tasks?.length) return 0;
+
+        const completedTasks = project.tasks.filter(
+            (task) => task.status === "completed",
+        ).length;
+
+        return Math.round((completedTasks / project.tasks.length) * 100);
     }
 
     async function handleDeleteProject(id: string) {
-        if (!confirm($_("common.confirmDelete"))) return;
+        if (!confirm($_("projects.confirmDeleteProject"))) return;
 
         error = "";
         try {
@@ -71,310 +69,377 @@
         }
     }
 
-    function getStatusColor(status: string) {
-        switch (status) {
-            case "pending":
-                return "bg-yellow-100 text-yellow-800";
-            case "in_progress":
-                return "bg-blue-100 text-blue-800";
-            case "completed":
-                return "bg-green-100 text-green-800";
-            default:
-                return "bg-gray-100 text-gray-800";
+    async function handleCreateProject(event: Event) {
+        event.preventDefault();
+        error = "";
+
+        try {
+            await api.createProject({
+                ...newProject,
+                start_date: new Date(newProject.start_date).toISOString(),
+                deadline: new Date(newProject.deadline).toISOString(),
+            });
+            showCreateModal = false;
+            await loadProjects();
+
+            // Reset form
+            newProject = {
+                name: "",
+                description: "",
+                start_date: new Date().toISOString().split("T")[0],
+                deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                    .toISOString()
+                    .split("T")[0],
+            };
+        } catch (err) {
+            error = $_("projects.errors.createFailed");
+            console.error(err);
         }
     }
 </script>
 
-<div class="py-6">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="sm:flex sm:items-center">
-            <div class="sm:flex-auto">
-                <h1 class="text-2xl font-semibold text-gray-900">
-                    {$_("common.projects")}
-                </h1>
-                <p class="mt-2 text-sm text-gray-700">
-                    {$_("projects.description")}
-                </p>
-            </div>
-            <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+<div class="space-y-8">
+    <!-- Header with modern design -->
+    <div
+        class="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary-600 to-primary-800 p-8 shadow-lg"
+    >
+        <div class="absolute inset-0 bg-grid-white/10"></div>
+        <div class="relative">
+            <div class="sm:flex sm:items-center sm:justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-white">
+                        {$_("common.projects")}
+                    </h1>
+                    <p class="mt-2 text-lg text-primary-100">
+                        {$_("projects.description")}
+                    </p>
+                </div>
                 <button
                     on:click={() => (showCreateModal = true)}
-                    class="inline-flex items-center justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 sm:w-auto"
+                    class="mt-4 sm:mt-0 inline-flex items-center rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-primary-600 shadow-sm hover:bg-primary-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white transition-all duration-200"
                 >
+                    <svg
+                        class="mr-2 -ml-1 h-5 w-5"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 4v16m8-8H4"
+                        />
+                    </svg>
                     {$_("projects.createProject")}
                 </button>
             </div>
         </div>
+    </div>
 
-        {#if error}
-            <div class="mt-4 rounded-md bg-red-50 p-4">
-                <div class="flex">
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-red-800">{error}</p>
-                    </div>
+    {#if error}
+        <div
+            class="rounded-lg bg-red-50 p-4 animate-in slide-in-from-top-4"
+            transition:fade
+        >
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg
+                        class="h-5 w-5 text-red-400"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                    >
+                        <path
+                            fill-rule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                            clip-rule="evenodd"
+                        />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-red-800">{error}</p>
                 </div>
             </div>
-        {/if}
+        </div>
+    {/if}
 
-        {#if loading}
-            <div class="mt-8 flex justify-center">
-                <svg
-                    class="animate-spin h-8 w-8 text-primary-600"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                >
-                    <circle
-                        class="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        stroke-width="4"
-                    ></circle>
-                    <path
-                        class="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                </svg>
-                <span class="sr-only">{$_("common.loading")}</span>
+    {#if loading}
+        <div class="flex justify-center py-12" transition:fade>
+            <div class="relative">
+                <div
+                    class="h-12 w-12 rounded-full border-4 border-primary-200 border-t-primary-600 animate-spin"
+                ></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <div class="h-6 w-6 rounded-full bg-primary-100"></div>
+                </div>
             </div>
-        {:else}
-            <div class="mt-8 flex flex-col">
-                <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-                    <div
-                        class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8"
-                    >
-                        <div
-                            class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg"
+        </div>
+    {:else}
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" transition:fade>
+            {#each projects as project (project.id)}
+                <div
+                    class="group relative overflow-hidden rounded-xl bg-white shadow-md ring-1 ring-black/5 hover:shadow-lg transition-all duration-300 dark:bg-gray-800 dark:ring-white/10"
+                    transition:fly={{ y: 20, duration: 300 }}
+                >
+                    <!-- Project card content -->
+                    <div class="p-6">
+                        <div class="flex items-center justify-between">
+                            <h3
+                                class="text-lg font-semibold text-gray-900 dark:text-white"
+                            >
+                                {project.name}
+                            </h3>
+                            <span
+                                class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset {Functions.getStatusColor(
+                                    project.status,
+                                )}"
+                            >
+                                {project.status}
+                            </span>
+                        </div>
+
+                        <p
+                            class="mt-2 text-sm text-gray-600 line-clamp-2 dark:text-gray-300"
                         >
-                            <table class="min-w-full divide-y divide-gray-300">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th
-                                            scope="col"
-                                            class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
-                                        >
-                                            {$_("projects.fields.name")}
-                                        </th>
-                                        <th
-                                            scope="col"
-                                            class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                                        >
-                                            {$_("projects.fields.status")}
-                                        </th>
-                                        <th
-                                            scope="col"
-                                            class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                                        >
-                                            {$_("projects.fields.startDate")}
-                                        </th>
-                                        <th
-                                            scope="col"
-                                            class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                                        >
-                                            {$_("projects.fields.deadline")}
-                                        </th>
-                                        <th
-                                            scope="col"
-                                            class="relative py-3.5 pl-3 pr-4 sm:pr-6"
-                                        >
-                                            <span class="sr-only"
-                                                >{$_("common.actions")}</span
-                                            >
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody
-                                    class="divide-y divide-gray-200 bg-white"
+                            {project.description}
+                        </p>
+
+                        <!-- Progress section -->
+                        <div class="mt-4">
+                            <div
+                                class="flex items-center justify-between text-xs"
+                            >
+                                <span class="text-gray-600 dark:text-gray-400">
+                                    {#if project.tasks?.length}
+                                        {project.tasks.filter(
+                                            (t) => t.status === "completed",
+                                        ).length} of {project.tasks.length}
+                                        {$_("common.tasks")}
+                                    {:else}
+                                        {$_("common.noTasks")}
+                                    {/if}
+                                </span>
+                                <span
+                                    class="font-medium text-gray-900 dark:text-white"
                                 >
-                                    {#each projects as project}
-                                        <tr>
-                                            <td
-                                                class="px-6 py-4 whitespace-nowrap"
-                                            >
-                                                <a
-                                                    href="/projects/{project.id}"
-                                                    class="text-primary-600 hover:text-primary-900"
-                                                >
-                                                    <div
-                                                        class="text-sm font-medium"
-                                                    >
-                                                        {project.name}
-                                                    </div>
-                                                </a>
-                                                <div
-                                                    class="text-sm text-gray-500 max-w-xl truncate"
-                                                >
-                                                    {project.description}
-                                                </div>
-                                            </td>
-                                            <td
-                                                class="whitespace-nowrap px-3 py-4 text-sm"
-                                            >
-                                                <span
-                                                    class="inline-flex rounded-full px-2 text-xs font-semibold leading-5 {getStatusColor(
-                                                        project.status,
-                                                    )}"
-                                                >
-                                                    {project.status}
-                                                </span>
-                                            </td>
-                                            <td
-                                                class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
-                                            >
-                                                {new Date(
-                                                    project.start_date,
-                                                ).toLocaleDateString()}
-                                            </td>
-                                            <td
-                                                class="whitespace-nowrap px-3 py-4 text-sm text-gray-500"
-                                            >
-                                                {new Date(
-                                                    project.deadline,
-                                                ).toLocaleDateString()}
-                                            </td>
-                                            <td
-                                                class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6"
-                                            >
-                                                <button
-                                                    on:click={() =>
-                                                        handleDeleteProject(
-                                                            project.id,
-                                                        )}
-                                                    class="text-red-600 hover:text-red-900"
-                                                >
-                                                    {$_("common.remove")}
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    {/each}
-                                </tbody>
-                            </table>
+                                    {getProgress(project)}%
+                                </span>
+                            </div>
+                            <div
+                                class="mt-1 h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700"
+                            >
+                                <div
+                                    class="h-2 rounded-full transition-all duration-500 {getProgressColor(
+                                        project,
+                                    )}"
+                                    style="width: {getProgress(project)}%"
+                                ></div>
+                            </div>
+                        </div>
+
+                        <!-- Project metadata -->
+                        <div
+                            class="mt-4 flex items-center justify-between text-sm"
+                        >
+                            <div class="text-gray-600 dark:text-gray-400">
+                                <span
+                                    >{new Date(
+                                        project.start_date,
+                                    ).toLocaleDateString()}</span
+                                >
+                                <span class="mx-1">→</span>
+                                <span
+                                    >{new Date(
+                                        project.deadline,
+                                    ).toLocaleDateString()}</span
+                                >
+                            </div>
+                            <!-- Team members -->
+                            <div class="flex -space-x-2">
+                                {#each (project.members || []).slice(0, 3) as member}
+                                    <div
+                                        class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary-500 text-xs font-medium text-white ring-2 ring-white"
+                                    >
+                                        {member.name?.[0]?.toUpperCase() ||
+                                            $_("common.unknownUser")}
+                                    </div>
+                                {/each}
+                                {#if (project.members || []).length > 3}
+                                    <div
+                                        class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-500 text-xs font-medium text-white ring-2 ring-white"
+                                    >
+                                        +{project.members.length - 3}
+                                    </div>
+                                {/if}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick actions -->
+                    <div
+                        class="absolute inset-x-0 bottom-0 translate-y-full bg-gray-50/90 backdrop-blur-sm p-4 transition-transform duration-300 group-hover:translate-y-0 dark:bg-gray-700/50"
+                    >
+                        <div class="flex justify-end space-x-3">
+                            {#if $user?.role === "admin"}
+                                <button
+                                    class="inline-flex items-center rounded-md bg-white/50 backdrop-blur-sm px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800/50 dark:text-white dark:ring-gray-600 dark:hover:bg-gray-700"
+                                    on:click={() =>
+                                        handleDeleteProject(project.id)}
+                                >
+                                    <svg
+                                        class="mr-2 -ml-0.5 h-4 w-4"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                        />
+                                    </svg>
+                                    {$_("common.remove")}
+                                </button>
+                            {/if}
+                            <a
+                                href="/projects/{project.id}"
+                                class="inline-flex items-center rounded-md bg-primary-600/90 backdrop-blur-sm px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
+                            >
+                                {$_("common.viewDetails")}
+                                <svg
+                                    class="ml-2 -mr-0.5 h-4 w-4"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M9 5l7 7-7 7"
+                                    />
+                                </svg>
+                            </a>
                         </div>
                     </div>
                 </div>
-            </div>
-        {/if}
-    </div>
+            {/each}
+        </div>
+    {/if}
 </div>
 
-<!-- Create Project Modal -->
+<!-- Create Project Modal with modern styling -->
 {#if showCreateModal}
-    <div
-        class="fixed z-10 inset-0 overflow-y-auto"
-        aria-labelledby="modal-title"
-        role="dialog"
-        aria-modal="true"
-    >
+    <div class="fixed inset-0 z-50 overflow-y-auto" transition:fade>
+        <!-- Modal backdrop -->
         <div
-            class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
+            class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm"
+            on:click={() => (showCreateModal = false)}
+        ></div>
+
+        <!-- Modal panel -->
+        <div
+            class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0"
         >
             <div
-                class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-                aria-hidden="true"
-            ></div>
-            <span
-                class="hidden sm:inline-block sm:align-middle sm:h-screen"
-                aria-hidden="true">&#8203;</span
-            >
-            <div
-                class="relative inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6"
+                class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 dark:bg-gray-800"
+                transition:fly={{ y: 20, duration: 300 }}
             >
                 <form on:submit|preventDefault={handleCreateProject}>
                     <div>
                         <h3
-                            class="text-lg leading-6 font-medium text-gray-900"
-                            id="modal-title"
+                            class="text-lg font-semibold leading-6 text-gray-900 dark:text-white"
                         >
                             {$_("projects.createProject")}
                         </h3>
-                        <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4">
+                        <div class="mt-6 space-y-6">
                             <div>
                                 <label
                                     for="name"
-                                    class="block text-sm font-medium text-gray-700"
-                                    >{$_("projects.fields.name")}</label
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
                                 >
-                                <div class="mt-1">
-                                    <input
-                                        type="text"
-                                        name="name"
-                                        id="name"
-                                        required
-                                        bind:value={newProject.name}
-                                        class="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                    />
-                                </div>
+                                    {$_("projects.fields.name")}
+                                </label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    id="name"
+                                    required
+                                    bind:value={newProject.name}
+                                    class="mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-white dark:ring-gray-600"
+                                />
                             </div>
 
                             <div>
                                 <label
                                     for="description"
-                                    class="block text-sm font-medium text-gray-700"
-                                    >{$_("projects.fields.description")}</label
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300"
                                 >
-                                <div class="mt-1">
-                                    <textarea
-                                        id="description"
-                                        name="description"
-                                        rows="3"
-                                        required
-                                        bind:value={newProject.description}
-                                        class="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                    ></textarea>
-                                </div>
+                                    {$_("projects.fields.description")}
+                                </label>
+                                <textarea
+                                    id="description"
+                                    name="description"
+                                    rows="3"
+                                    required
+                                    bind:value={newProject.description}
+                                    class="mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-white dark:ring-gray-600"
+                                ></textarea>
                             </div>
 
-                            <div>
-                                <label
-                                    for="start_date"
-                                    class="block text-sm font-medium text-gray-700"
-                                    >{$_("projects.fields.startDate")}</label
-                                >
-                                <div class="mt-1">
+                            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                                <div>
+                                    <label
+                                        for="start_date"
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                    >
+                                        {$_("projects.fields.startDate")}
+                                    </label>
                                     <input
                                         type="date"
                                         name="start_date"
                                         id="start_date"
                                         required
                                         bind:value={newProject.start_date}
-                                        class="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                        class="mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-white dark:ring-gray-600"
                                     />
                                 </div>
-                            </div>
 
-                            <div>
-                                <label
-                                    for="deadline"
-                                    class="block text-sm font-medium text-gray-700"
-                                    >{$_("projects.fields.deadline")}</label
-                                >
-                                <div class="mt-1">
+                                <div>
+                                    <label
+                                        for="deadline"
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                    >
+                                        {$_("projects.fields.deadline")}
+                                    </label>
                                     <input
                                         type="date"
                                         name="deadline"
                                         id="deadline"
                                         required
                                         bind:value={newProject.deadline}
-                                        class="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                        class="mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 dark:bg-gray-700 dark:text-white dark:ring-gray-600"
                                     />
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="mt-5 sm:mt-6 grid grid-cols-2 gap-3">
+                    <div class="mt-6 flex items-center justify-end gap-x-3">
                         <button
                             type="button"
                             on:click={() => (showCreateModal = false)}
-                            class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:text-sm"
+                            class="rounded-md px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:text-white dark:ring-gray-600 dark:hover:bg-gray-700"
                         >
                             {$_("common.cancel")}
                         </button>
                         <button
                             type="submit"
-                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:text-sm"
+                            class="inline-flex items-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
                         >
                             {$_("common.create")}
                         </button>

@@ -2,12 +2,11 @@ export interface Project {
     id: string;
     name: string;
     description: string;
+    status: string;
     start_date: string;
     deadline: string;
-    status: 'pending' | 'in_progress' | 'completed';
-    created_at: string;
-    updated_at: string;
-    is_active: boolean;
+    tasks?: Task[];
+    members?: ProjectMember[];
 }
 
 export interface ProjectCreate {
@@ -19,10 +18,11 @@ export interface ProjectCreate {
 
 export interface ProjectMember {
     id: string;
-    project_id: string;
     user_id: string;
-    role: 'project_manager' | 'project_member';
-    created_at: string;
+    project_id: string;
+    role: string;
+    name?: string;
+    email?: string;
 }
 
 export interface Task {
@@ -30,13 +30,15 @@ export interface Task {
     name: string;
     description: string;
     project_id: string;
+    parent_task_id?: string;
     start_date: string;
     deadline: string;
-    assigned_to_id: string | null;
+    assigned_to_id?: string;
     created_by_id: string;
     status: 'pending' | 'in_progress' | 'completed';
     created_at: string;
     updated_at: string;
+    subtasks?: Task[];
 }
 
 export interface TaskCreate {

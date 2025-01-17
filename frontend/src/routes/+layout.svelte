@@ -67,7 +67,11 @@
     }
 </script>
 
-{#if $isLoading}
+{#if $user}
+    <div class="light">
+        <slot />
+    </div>
+{:else if $isLoading}
     <div class="min-h-screen flex items-center justify-center">
         <p>Loading...</p>
     </div>
