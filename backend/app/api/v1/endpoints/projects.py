@@ -110,6 +110,12 @@ class ProjectsEndpoint(BaseEndpoint):
     ) -> DefaultResponse:
         if not Projects.is_project_manager(userinfo.id, project_id) and userinfo.role != UserRole.ADMIN:
             raise HTTPException(status_code=403, detail="Only project managers can remove members")
+        # Check if there is at least one project manager left
+        if Projects.get_project_members(project_id):
+            project_managers = [member for member in Projects.get_project_members(
+                project_id) if member.role == "project_manager"]
+            if len(project_managers) == 1:
+                raise HTTPException(status_code=400, detail="Cannot remove the last project manager")
         if Projects.remove_project_member(project_id, user_id):
             return DefaultResponse(code=200, result="Member removed successfully")
         raise HTTPException(status_code=404, detail="Member not found")
