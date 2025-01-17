@@ -744,7 +744,7 @@
                     class="mt-4 space-y-4"
                     on:submit|preventDefault={async () => {
                         try {
-                            await api.createTask(projectId, newTask);
+                            await api.createTask(newTask);
                             showCreateTaskModal = false;
                             await loadProjectData();
                         } catch (err) {
