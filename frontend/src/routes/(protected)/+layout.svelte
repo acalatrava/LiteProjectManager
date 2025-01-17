@@ -38,9 +38,7 @@
     }
 </script>
 
-<div
-    class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 "
->
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
     <!-- Mobile sidebar backdrop -->
     {#if isSidebarOpen}
         <div
@@ -51,14 +49,11 @@
     {/if}
 
     <!-- Sidebar -->
-    <div
-        class={`fixed top-0 left-0 bottom-0 w-64 bg-white "}`}
-    >
+    <div class={`fixed top-0 left-0 bottom-0 w-64 bg-white "}`}>
         <div class="h-full flex flex-col">
             <!-- Logo -->
             <div class="flex-shrink-0 px-4 py-6 flex items-center">
-                <span
-                    class="ml-3 text-xl font-bold text-gray-900 "
+                <span class="ml-3 text-xl font-bold text-gray-900"
                     >Dashboard</span
                 >
             </div>
@@ -98,9 +93,7 @@
             </nav>
 
             <!-- User profile -->
-            <div
-                class="flex-shrink-0 p-4 border-t border-gray-200 "
-            >
+            <div class="flex-shrink-0 p-4 border-t border-gray-200">
                 <div class="flex items-center">
                     <div
                         class="h-10 w-10 rounded-full bg-primary-500 flex items-center justify-center text-white font-semibold"
@@ -110,18 +103,16 @@
                             "U"}
                     </div>
                     <div class="ml-3 flex-1">
-                        <p
-                            class="text-sm font-medium text-gray-900 "
-                        >
+                        <p class="text-sm font-medium text-gray-900">
                             {$user?.name || $user?.username}
                         </p>
-                        <p class="text-xs text-gray-500 ">
+                        <p class="text-xs text-gray-500">
                             {$user?.role}
                         </p>
                     </div>
                     <button
                         on:click={logout}
-                        class="p-2 text-gray-500 hover:text-gray-700 "
+                        class="p-2 text-gray-500 hover:text-gray-700"
                         title={$_("common.logout")}
                     >
                         <svg
@@ -147,9 +138,7 @@
     <!-- Main content -->
     <div class="lg:pl-64">
         <!-- Top bar -->
-        <div
-            class="sticky top-0 z-10 flex h-16 bg-white/80 "
-        >
+        <div class="sticky top-0 z-10 flex h-16 bg-white/80">
             <button
                 type="button"
                 class="lg:hidden px-4 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
