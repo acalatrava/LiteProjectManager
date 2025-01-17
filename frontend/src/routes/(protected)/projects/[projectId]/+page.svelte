@@ -825,7 +825,11 @@
                     class="mt-4 space-y-4"
                     on:submit|preventDefault={async () => {
                         try {
-                            await api.addProjectMember(projectId, newMember);
+                            await api.addProjectMember(
+                                projectId,
+                                newMember.user_id,
+                                newMember.role,
+                            );
                             showAddMemberModal = false;
                             await loadProjectData();
                         } catch (err) {
