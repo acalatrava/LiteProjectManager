@@ -164,6 +164,13 @@ class UsersTable:
 
     def update_user_by_id(self, id: str, updated: dict) -> Optional[UserInDB]:
         try:
+            # If changing password, generate new salt and hash
+            if 'password' in updated:
+                salt = str(uuid.uuid4())
+                updated['password'] = hashlib.sha256((salt + updated['password']).encode()).hexdigest()
+                updated['salt'] = salt
+
+            # Update user
             query = User.update(**updated).where(User.id == id)
             query.execute()
 
