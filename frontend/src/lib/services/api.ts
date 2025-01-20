@@ -127,58 +127,6 @@ class ApiService {
         }
     }
 
-    // Sample management
-    async getSamples(): Promise<Sample[]> {
-        const response = await fetch(`${API_URL}/api/v1/sample/`, {
-            headers: this.getHeaders(),
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to get samples');
-        }
-
-        const data = await response.json();
-        return data.results;
-    }
-
-    async addSample(info: string): Promise<void> {
-        const response = await fetch(`${API_URL}/api/v1/sample/`, {
-            method: 'POST',
-            headers: this.getHeaders(),
-            body: JSON.stringify({ info }),
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail || 'Failed to add sample');
-        }
-    }
-
-    async deleteSample(id: string): Promise<void> {
-        const response = await fetch(`${API_URL}/api/v1/sample/${id}`, {
-            method: 'DELETE',
-            headers: this.getHeaders(),
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to delete sample');
-        }
-    }
-
-    // Search functionality
-    async search(query: string): Promise<SearchResult[]> {
-        const response = await fetch(`${API_URL}/api/v1/search/?q=${encodeURIComponent(query)}`, {
-            headers: this.getHeaders(),
-        });
-
-        if (!response.ok) {
-            throw new Error('Search failed');
-        }
-
-        const data = await response.json();
-        return data.results;
-    }
-
     async updateProfile(data: Partial<User>): Promise<User> {
         const response = await fetch(`${API_URL}/api/v1/userinfo/`, {
             method: 'PATCH',
@@ -234,7 +182,7 @@ class ApiService {
     }
 
     async getProjects(): Promise<Project[]> {
-        const response = await fetch(`${API_URL}/api/v1/projects?include_tasks=true&include_members=true`, {
+        const response = await fetch(`${API_URL}/api/v1/projects/?include_tasks=true&include_members=true`, {
             headers: this.getHeaders(),
         });
         await this.handleResponse(response);
@@ -278,7 +226,7 @@ class ApiService {
     }
 
     async getProjectMembers(projectId: string): Promise<ProjectMember[]> {
-        const response = await fetch(`${API_URL}/api/v1/projects/${projectId}/members`, {
+        const response = await fetch(`${API_URL}/api/v1/projects/${projectId}/members/`, {
             headers: this.getHeaders(),
         });
 
@@ -287,7 +235,7 @@ class ApiService {
     }
 
     async addProjectMember(projectId: string, userId: string, role: string): Promise<ProjectMember> {
-        const response = await fetch(`${API_URL}/api/v1/projects/${projectId}/members`, {
+        const response = await fetch(`${API_URL}/api/v1/projects/${projectId}/members/`, {
             method: 'POST',
             headers: this.getHeaders(),
             body: JSON.stringify({ user_id: userId, role, project_id: projectId }),
