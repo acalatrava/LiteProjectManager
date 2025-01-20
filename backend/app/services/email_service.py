@@ -38,72 +38,73 @@ class EmailService:
     @staticmethod
     def notify_project_assignment(user_email: str, project_name: str, project_url: str):
         """Send notification when user is assigned to a project"""
-        subject = f"You've been added to project: {project_name}"
+        subject = f"Has sido añadido al proyecto: {project_name}"
         html_content = f"""
-        <h2>Project Assignment Notification</h2>
-        <p>You have been added to the project: <strong>{project_name}</strong></p>
-        <p>Click <a href="{project_url}">here</a> to view the project.</p>
+        <h2>Notificación de Asignación de Proyecto</h2>
+        <p>Has sido añadido al proyecto: <strong>{project_name}</strong></p>
+        <p>Conéctate a la VPN y haz clic <a href="{project_url}">aquí</a> para ver el proyecto.</p>
         """
         return EmailService.send_email([user_email], subject, html_content)
 
     @staticmethod
     def notify_task_assignment(user_email: str, task_name: str, project_name: str, task_url: str):
         """Send notification when task is assigned to user"""
-        subject = f"New task assigned: {task_name}"
+        subject = f"Nueva tarea asignada: {task_name}"
         html_content = f"""
-        <h2>Task Assignment Notification</h2>
-        <p>You have been assigned a new task in project {project_name}:</p>
+        <h2>Notificación de Asignación de Tarea</h2>
+        <p>Se te ha asignado una nueva tarea en el proyecto {project_name}:</p>
         <p><strong>{task_name}</strong></p>
-        <p>Click <a href="{task_url}">here</a> to view the task.</p>
+        <p>Haz clic <a href="{task_url}">aquí</a> para ver la tarea.</p>
         """
         return EmailService.send_email([user_email], subject, html_content)
 
     @staticmethod
     def notify_task_completed(user_emails: List[str], task_name: str, project_name: str, completed_by: str):
         """Send notification when task is marked as completed"""
-        subject = f"Task completed: {task_name}"
+        subject = f"Tarea completada: {task_name}"
         html_content = f"""
-        <h2>Task Completion Notification</h2>
-        <p>A task in project {project_name} has been marked as completed:</p>
+        <h2>Notificación de Tarea Completada</h2>
+        <p>Una tarea en el proyecto {project_name} ha sido marcada como completada:</p>
         <p><strong>{task_name}</strong></p>
-        <p>Completed by: {completed_by}</p>
+        <p>Completada por: {completed_by}</p>
         """
         return EmailService.send_email(user_emails, subject, html_content)
 
     @staticmethod
     def notify_project_completed(user_emails: List[str], project_name: str):
         """Send notification when project is marked as completed"""
-        subject = f"Project completed: {project_name}"
+        subject = f"Proyecto completado: {project_name}"
         html_content = f"""
-        <h2>Project Completion Notification</h2>
-        <p>The following project has been marked as completed:</p>
+        <h2>Notificación de Proyecto Completado</h2>
+        <p>El siguiente proyecto ha sido marcado como completado:</p>
         <p><strong>{project_name}</strong></p>
-        <p>Congratulations to all team members!</p>
+        <p>¡Felicidades a todos los miembros del equipo!</p>
         """
         return EmailService.send_email(user_emails, subject, html_content)
 
     @staticmethod
     def send_new_user_credentials(username: str, password: str) -> bool:
         """Send welcome email to new user with their credentials"""
-        subject = "Welcome to Project Manager - Your Account Details"
+        subject = "Bienvenido al Gestor de Proyectos - Detalles de tu Cuenta"
         html_content = f"""
-        <h2>Welcome to Project Manager</h2>
-        <p>Your account has been created in the Project Manager system.</p>
-        <p>Your login credentials are:</p>
+        <h2>Bienvenido al Gestor de Proyectos</h2>
+        <p>Tu cuenta ha sido creada en el sistema de Gestión de Proyectos.</p>
+        <p>Tus credenciales de acceso son:</p>
         <ul>
-            <li><strong>Username:</strong> {username}</li>
-            <li><strong>Password:</strong> {password}</li>
+            <li><strong>Usuario:</strong> {username}</li>
+            <li><strong>Contraseña:</strong> {password}</li>
         </ul>
-        <p>Please change your password after your first login.</p>
-        <p>Best regards,<br>Project Manager Team</p>
+        <p>Conéctate a la VPN y accede al sistema haciendo clic <a href="{config.SERVER_URL}/login">aquí</a>.</p>
+        <p>Por favor, cambia tu contraseña después de tu primer inicio de sesión.</p>
+        <p>Saludos cordiales,<br>Equipo de Gestión de Proyectos</p>
         """
         return EmailService.send_email([username], subject, html_content)
 
     @staticmethod
     def notify_project_reopened(emails: List[str], project_name: str):
-        subject = f"Project {project_name} has been reopened"
+        subject = f"El proyecto {project_name} ha sido reabierto"
         content = f"""
-            The project {project_name} has been reopened due to new tasks being added.
-            Please check the project status and any new assignments.
+            Se han añadido nuevas tareas y el proyecto {project_name} ha sido reabierto.
+            Por favor, revisa el estado del proyecto y las nuevas asignaciones.
         """
         EmailService.send_email(emails, subject, content)
