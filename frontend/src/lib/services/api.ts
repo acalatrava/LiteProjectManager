@@ -226,7 +226,7 @@ class ApiService {
     }
 
     async getProjectMembers(projectId: string): Promise<ProjectMember[]> {
-        const response = await fetch(`${API_URL}/api/v1/projects/${projectId}/members/`, {
+        const response = await fetch(`${API_URL}/api/v1/projects/${projectId}/members`, {
             headers: this.getHeaders(),
         });
 
@@ -235,7 +235,7 @@ class ApiService {
     }
 
     async addProjectMember(projectId: string, userId: string, role: string): Promise<ProjectMember> {
-        const response = await fetch(`${API_URL}/api/v1/projects/${projectId}/members/`, {
+        const response = await fetch(`${API_URL}/api/v1/projects/${projectId}/members`, {
             method: 'POST',
             headers: this.getHeaders(),
             body: JSON.stringify({ user_id: userId, role, project_id: projectId }),
