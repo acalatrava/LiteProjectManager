@@ -52,9 +52,19 @@ class ProjectsEndpoint(BaseEndpoint):
     async def update_project(
         self,
         project_id: str = Path(...),
-        project: ProjectUpdate = Body(...),
+        edited_project: ProjectUpdate = Body(...),
         userinfo=Depends(admin_user_check)
     ) -> Project:
+        # First, get the project
+        project = Projects.get_project(project_id)
+        print(project)
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+        # Then, update the keys in project from edited_project
+        for key, value in edited_project.model_dump().items():
+            if value is not None:
+                setattr(project, key, value)
+        print(project)
         updated = Projects.update_project(project_id, project)
         if not updated:
             raise HTTPException(status_code=404, detail="Project not found")

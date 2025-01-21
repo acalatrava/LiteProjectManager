@@ -33,6 +33,11 @@
     };
     let availableUsers: User[] = [];
 
+    let isEditingDescription = false;
+    let editedDescription = "";
+    let isEditingDeadline = false;
+    let editedDeadline = "";
+
     // Watch for route parameter changes
     $: if ($page.params.taskId !== taskId) {
         taskId = $page.params.taskId;
@@ -137,6 +142,34 @@
         }
         return `/projects/${projectId}`;
     }
+
+    async function updateTaskDescription() {
+        if (!task) return;
+        try {
+            await api.updateTask(task.id, {
+                description: editedDescription,
+            });
+            task.description = editedDescription;
+            isEditingDescription = false;
+        } catch (err) {
+            console.error(err);
+            error = "Failed to update task description";
+        }
+    }
+
+    async function updateTaskDeadline() {
+        if (!task) return;
+        try {
+            await api.updateTask(task.id, {
+                deadline: editedDeadline,
+            });
+            task.deadline = editedDeadline;
+            isEditingDeadline = false;
+        } catch (err) {
+            console.error(err);
+            error = "Failed to update task deadline";
+        }
+    }
 </script>
 
 <div class="space-y-8">
@@ -192,7 +225,46 @@
                             </div>
                         </div>
                         <p class="mt-2 text-lg text-primary-100 max-w-xl">
-                            {task?.description}
+                            {#if isEditingDescription}
+                                <form
+                                    class="flex gap-2"
+                                    on:submit|preventDefault={updateTaskDescription}
+                                >
+                                    <input
+                                        type="text"
+                                        bind:value={editedDescription}
+                                        class="flex-1 rounded-lg bg-white/10 backdrop-blur-sm px-3 py-1.5 text-white placeholder:text-primary-100"
+                                        placeholder={$_(
+                                            "tasks.fields.description",
+                                        )}
+                                    />
+                                    <button
+                                        type="submit"
+                                        class="rounded-lg bg-white/10 backdrop-blur-sm px-3 py-1.5 text-white hover:bg-white/20"
+                                    >
+                                        {$_("common.save")}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        on:click={() =>
+                                            (isEditingDescription = false)}
+                                        class="rounded-lg bg-white/10 backdrop-blur-sm px-3 py-1.5 text-white hover:bg-white/20"
+                                    >
+                                        {$_("common.cancel")}
+                                    </button>
+                                </form>
+                            {:else}
+                                <span
+                                    class="cursor-pointer hover:underline"
+                                    on:click={() => {
+                                        editedDescription =
+                                            task?.description || "";
+                                        isEditingDescription = true;
+                                    }}
+                                >
+                                    {task?.description}
+                                </span>
+                            {/if}
                         </p>
                     </div>
                     <div class="flex items-center space-x-4">
@@ -297,9 +369,52 @@
                                 <p
                                     class="mt-1 text-lg font-semibold text-white"
                                 >
-                                    {new Date(
-                                        task.deadline,
-                                    ).toLocaleDateString()}
+                                    {#if isEditingDeadline}
+                                        <form
+                                            class="flex flex-col gap-2"
+                                            on:submit|preventDefault={updateTaskDeadline}
+                                        >
+                                            <input
+                                                type="date"
+                                                bind:value={editedDeadline}
+                                                class="w-full rounded-lg bg-white/10 backdrop-blur-sm px-3 py-1.5 text-white"
+                                            />
+                                            <div class="flex gap-2">
+                                                <button
+                                                    type="submit"
+                                                    class="flex-1 rounded-lg bg-white/10 backdrop-blur-sm px-3 py-1.5 text-white hover:bg-white/20"
+                                                >
+                                                    {$_("common.save")}
+                                                </button>
+                                            </div>
+                                            <div class="flex gap-2">
+                                                <button
+                                                    type="button"
+                                                    on:click={() =>
+                                                        (isEditingDeadline = false)}
+                                                    class="flex-1 rounded-lg bg-white/10 backdrop-blur-sm px-3 py-1.5 text-white hover:bg-white/20"
+                                                >
+                                                    {$_("common.cancel")}
+                                                </button>
+                                            </div>
+                                        </form>
+                                    {:else}
+                                        <span
+                                            class="cursor-pointer hover:underline"
+                                            on:click={() => {
+                                                editedDeadline = new Date(
+                                                    task?.deadline || "",
+                                                )
+                                                    .toISOString()
+                                                    .split("T")[0];
+                                                isEditingDeadline = true;
+                                            }}
+                                        >
+                                            {new Date(
+                                                task?.deadline || "",
+                                            ).toLocaleDateString()}
+                                        </span>
+                                    {/if}
                                 </p>
                             </div>
                         </div>

@@ -17,6 +17,10 @@ class ProjectCreate(ProjectBase):
 
 class ProjectUpdate(ProjectBase):
     status: Optional[str] = None
+    name: Optional[str] = None
+    description: Optional[str] = None
+    start_date: Optional[datetime] = None
+    deadline: Optional[datetime] = None
 
 
 class ProjectMemberBase(BaseModel):
