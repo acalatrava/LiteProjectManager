@@ -242,5 +242,12 @@
             "deleteFailed": "Failed to delete task",
             "memberAddFailed": "Failed to add member"
         }
+    },
+    "tasks": {
+        "errors": {
+            "deadlineAfterProject": "Task deadline cannot be later than project deadline",
+            "deadlineAfterParentTask": "Subtask deadline cannot be later than parent task deadline",
+            "createFailed": "Failed to create task"
+        }
     }
 }

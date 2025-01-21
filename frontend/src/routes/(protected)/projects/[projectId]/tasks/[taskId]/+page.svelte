@@ -2,7 +2,7 @@
     import { page } from "$app/stores";
     import { onMount, afterUpdate } from "svelte";
     import { api } from "$lib/services/api";
-    import type { Task, Comment, User } from "$lib/types/project";
+    import type { Task, Comment, User, Project } from "$lib/types/project";
     import { _ } from "svelte-i18n";
     import { fade, fly } from "svelte/transition";
     import { Functions } from "$lib/services/functions";
@@ -24,10 +24,11 @@
         name: "",
         description: "",
         parent_task_id: taskId,
-        start_date: new Date().toISOString().split("T")[0],
-        deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-            .toISOString()
-            .split("T")[0],
+        start_date: new Date().toISOString().split("T")[0] + "T08:00:00Z",
+        deadline:
+            new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+                .toISOString()
+                .split("T")[0] + "T12:00:00Z",
         assigned_to_id: "",
         project_id: projectId,
     };
@@ -37,6 +38,8 @@
     let editedDescription = "";
     let isEditingDeadline = false;
     let editedDeadline = "";
+
+    let project: Project | null = null;
 
     // Watch for route parameter changes
     $: if ($page.params.taskId !== taskId) {
@@ -52,15 +55,22 @@
         loading = true;
         error = "";
         try {
-            const [taskData, commentsData, usersData, membersData] =
-                await Promise.all([
-                    api.getTask(taskId),
-                    api.getTaskComments(taskId),
-                    api.getUsers(),
-                    api.getProjectMembers(projectId),
-                ]);
+            const [
+                taskData,
+                commentsData,
+                usersData,
+                membersData,
+                projectData,
+            ] = await Promise.all([
+                api.getTask(taskId),
+                api.getTaskComments(taskId),
+                api.getUsers(),
+                api.getProjectMembers(projectId),
+                api.getProject(projectId),
+            ]);
 
             task = taskData;
+            project = projectData;
 
             if (task.parent_task_id) {
                 parentTask = await api.getTask(task.parent_task_id);
@@ -160,14 +170,28 @@
     async function updateTaskDeadline() {
         if (!task) return;
         try {
+            // Normalize dates to UTC for comparison
+            const taskDeadline = new Date(editedDeadline + "T12:00:00Z");
+            const projectDeadline = new Date(
+                project?.deadline.split("T")[0] + "T12:00:00Z",
+            );
+
+            if (taskDeadline > projectDeadline) {
+                throw new Error($_("tasks.errors.deadlineAfterProject"));
+            }
+
             await api.updateTask(task.id, {
-                deadline: editedDeadline,
+                deadline: editedDeadline + "T12:00:00Z",
             });
-            task.deadline = editedDeadline;
+            task.deadline = editedDeadline + "T12:00:00Z";
             isEditingDeadline = false;
         } catch (err) {
             console.error(err);
-            error = "Failed to update task deadline";
+            error =
+                err instanceof Error
+                    ? err.message
+                    : "Failed to update task deadline";
+            alert(error);
         }
     }
 </script>
@@ -754,11 +778,39 @@
                     class="mt-4 space-y-4"
                     on:submit|preventDefault={async () => {
                         try {
+                            // Normalize dates to UTC for comparison
+                            const subtaskDeadline = new Date(
+                                newTask.deadline + "T12:00:00Z",
+                            );
+                            const taskDeadline = new Date(
+                                task?.deadline.split("T")[0] + "T12:00:00Z",
+                            );
+                            const projectDeadline = new Date(
+                                project?.deadline.split("T")[0] + "T12:00:00Z",
+                            );
+
+                            // Check against both task and project deadlines
+                            if (subtaskDeadline > taskDeadline) {
+                                throw new Error(
+                                    $_("tasks.errors.deadlineAfterParentTask"),
+                                );
+                            }
+                            if (subtaskDeadline > projectDeadline) {
+                                throw new Error(
+                                    $_("tasks.errors.deadlineAfterProject"),
+                                );
+                            }
+
                             await api.createTask(newTask);
                             showCreateTaskModal = false;
                             await loadTaskData();
                         } catch (err) {
+                            error =
+                                err instanceof Error
+                                    ? err.message
+                                    : $_("tasks.errors.createFailed");
                             console.error(err);
+                            alert(error);
                         }
                     }}
                 >
@@ -794,13 +846,14 @@
                             <label
                                 for="start-date"
                                 class="block text-sm font-medium text-gray-700"
-                                >Start Date</label
+                                >{$_("common.taskStartDate")}</label
                             >
                             <input
                                 type="date"
                                 id="start-date"
                                 bind:value={newTask.start_date}
                                 required
+                                max={task?.deadline.split("T")[0]}
                                 class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500"
                             />
                         </div>
@@ -808,13 +861,14 @@
                             <label
                                 for="deadline"
                                 class="block text-sm font-medium text-gray-700"
-                                >Deadline</label
+                                >{$_("common.taskDeadline")}</label
                             >
                             <input
                                 type="date"
                                 id="deadline"
                                 bind:value={newTask.deadline}
                                 required
+                                max={task?.deadline.split("T")[0]}
                                 class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500"
                             />
                         </div>

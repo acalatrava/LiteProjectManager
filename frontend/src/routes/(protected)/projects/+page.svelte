@@ -14,10 +14,11 @@
     let newProject = {
         name: "",
         description: "",
-        start_date: new Date().toISOString().split("T")[0],
-        deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-            .toISOString()
-            .split("T")[0],
+        start_date: new Date().toISOString().split("T")[0] + "T08:00:00Z",
+        deadline:
+            new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                .toISOString()
+                .split("T")[0] + "T12:00:00Z",
     };
 
     onMount(async () => {
@@ -86,10 +87,12 @@
             newProject = {
                 name: "",
                 description: "",
-                start_date: new Date().toISOString().split("T")[0],
-                deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-                    .toISOString()
-                    .split("T")[0],
+                start_date:
+                    new Date().toISOString().split("T")[0] + "T08:00:00Z",
+                deadline:
+                    new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                        .toISOString()
+                        .split("T")[0] + "T12:00:00Z",
             };
         } catch (err) {
             error = $_("projects.errors.createFailed");

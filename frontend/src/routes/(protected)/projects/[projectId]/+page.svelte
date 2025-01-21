@@ -27,10 +27,11 @@
         name: "",
         description: "",
         project_id: projectId,
-        start_date: new Date().toISOString().split("T")[0],
-        deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-            .toISOString()
-            .split("T")[0],
+        start_date: new Date().toISOString().split("T")[0] + "T08:00:00Z",
+        deadline:
+            new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+                .toISOString()
+                .split("T")[0] + "T12:00:00Z",
         assigned_to_id: "",
     };
 
@@ -874,11 +875,30 @@
                     class="mt-4 space-y-4"
                     on:submit|preventDefault={async () => {
                         try {
+                            // Normalize dates to UTC for comparison
+                            const taskDeadline = new Date(
+                                newTask.deadline + "T12:00:00Z",
+                            );
+                            const projectDeadline = new Date(
+                                project?.deadline.split("T")[0] + "T12:00:00Z",
+                            );
+                            if (taskDeadline > projectDeadline) {
+                                throw new Error(
+                                    $_("tasks.errors.deadlineAfterProject"),
+                                );
+                            }
+
                             await api.createTask(newTask);
                             showCreateTaskModal = false;
                             await loadProjectData();
                         } catch (err) {
+                            error =
+                                err instanceof Error
+                                    ? err.message
+                                    : $_("tasks.errors.createFailed");
                             console.error(err);
+                            // Alert the user
+                            alert(err.message);
                         }
                     }}
                 >
@@ -928,14 +948,17 @@
                             <label
                                 for="deadline"
                                 class="block text-sm font-medium text-gray-700"
-                                >{$_("common.taskDeadline")}</label
                             >
+                                {$_("tasks.fields.deadline")}
+                            </label>
                             <input
                                 type="date"
+                                name="deadline"
                                 id="deadline"
-                                bind:value={newTask.deadline}
                                 required
-                                class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-primary-500"
+                                max={project.deadline.split("T")[0]}
+                                bind:value={newTask.deadline}
+                                class="mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6"
                             />
                         </div>
                     </div>

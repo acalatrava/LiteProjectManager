@@ -230,5 +230,12 @@
             "deleteFailed": "Error al eliminar la tarea",
             "memberAddFailed": "Error al añadir miembro"
         }
+    },
+    "tasks": {
+        "errors": {
+            "deadlineAfterProject": "La fecha límite de la tarea no puede ser posterior a la fecha límite del proyecto",
+            "deadlineAfterParentTask": "La fecha límite de la subtarea no puede ser posterior a la fecha límite de la tarea principal",
+            "createFailed": "Error al crear la tarea"
+        }
     }
 }
