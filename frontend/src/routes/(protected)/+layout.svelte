@@ -49,7 +49,11 @@
     {/if}
 
     <!-- Sidebar -->
-    <div class={`fixed top-0 left-0 bottom-0 w-64 bg-white "}`}>
+    <div
+        class={`fixed top-0 left-0 bottom-0 w-64 bg-white transform lg:translate-x-0 transition-transform duration-200 ease-in-out z-50 ${
+            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+    >
         <div class="h-full flex flex-col">
             <!-- Logo -->
             <div class="flex-shrink-0 px-4 py-6 flex items-center">
@@ -63,6 +67,11 @@
                 {#each navigation as item}
                     <a
                         href={item.href}
+                        on:click={() => {
+                            if (window.innerWidth < 1024) {
+                                isSidebarOpen = false;
+                            }
+                        }}
                         class={`group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
                             currentPath.startsWith(item.href)
                                 ? "bg-primary-50 text-primary-700 "
