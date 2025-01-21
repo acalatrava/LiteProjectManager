@@ -48,7 +48,8 @@
         "unknownUser": "Unknown User",
         "actions": "Actions",
         "confirmDelete": "Are you sure you want to delete?",
-        "viewDetails": "View details"
+        "viewDetails": "View details",
+        "save": "Save"
     },
     "auth": {
         "loginTitle": "Login to your account",

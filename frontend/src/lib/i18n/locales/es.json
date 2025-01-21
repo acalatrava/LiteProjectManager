@@ -48,7 +48,8 @@
         "unknownUser": "Usuario Desconocido",
         "actions": "Acciones",
         "confirmDelete": "¿Está seguro de que desea eliminar?",
-        "viewDetails": "Ver detalles"
+        "viewDetails": "Ver detalles",
+        "save": "Guardar"
     },
     "auth": {
         "loginTitle": "Iniciar sesión en su cuenta",
