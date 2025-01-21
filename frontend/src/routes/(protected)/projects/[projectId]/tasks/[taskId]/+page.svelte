@@ -259,7 +259,7 @@
                                         bind:value={editedDescription}
                                         class="flex-1 rounded-lg bg-white/10 backdrop-blur-sm px-3 py-1.5 text-white placeholder:text-primary-100"
                                         placeholder={$_(
-                                            "tasks.fields.description",
+                                            "projects.fields.description",
                                         )}
                                     />
                                     <button

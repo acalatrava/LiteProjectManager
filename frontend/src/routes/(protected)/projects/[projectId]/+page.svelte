@@ -949,7 +949,7 @@
                                 for="deadline"
                                 class="block text-sm font-medium text-gray-700"
                             >
-                                {$_("tasks.fields.deadline")}
+                                {$_("projects.fields.deadline")}
                             </label>
                             <input
                                 type="date"
