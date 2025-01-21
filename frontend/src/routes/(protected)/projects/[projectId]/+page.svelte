@@ -500,14 +500,15 @@
 
         <!-- Gantt Chart -->
         {#if !loading && project && ganttTasks.length > 0}
-            <div class="rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5">
-                <div class="p-6">
+            <div class="gantt-container">
+                <div class="gantt-chart" style="height: calc(100vh - 200px);">
+                    <!-- Gantt chart content -->
                     <h2 class="text-base font-semibold leading-7 text-gray-900">
                         {$_("common.timeline")}
                     </h2>
                     <div class="mt-6">
                         <!-- Fixed height container with both scrollbars -->
-                        <div class="h-[400px] overflow-hidden">
+                        <div class="overflow-hidden">
                             <!-- Scrollable container -->
                             <div
                                 class="h-full overflow-x-auto overflow-y-auto custom-scrollbar"
@@ -525,15 +526,30 @@
                                             {#each timelineDates as date, i}
                                                 <div class="flex-none w-[3%]">
                                                     <div
-                                                        class="px-1 py-2 text-xs font-medium text-gray-500"
+                                                        class="px-1 py-2 text-xs font-medium text-gray-500 flex flex-col items-left"
                                                     >
-                                                        {date.toLocaleDateString(
-                                                            undefined,
-                                                            {
-                                                                month: "short",
-                                                                day: "numeric",
-                                                            },
-                                                        )}
+                                                        {#if i === 0 || date.getMonth() !== timelineDates[i - 1].getMonth()}
+                                                            {date.toLocaleDateString(
+                                                                undefined,
+                                                                {
+                                                                    month: "long",
+                                                                },
+                                                            )}
+                                                        {:else}
+                                                            <br />
+                                                        {/if}
+                                                    </div>
+                                                    <div
+                                                        class="px-1 py-2 text-xs font-medium text-gray-500 flex flex-col items-center"
+                                                    >
+                                                        <span>
+                                                            {date.toLocaleDateString(
+                                                                undefined,
+                                                                {
+                                                                    day: "numeric",
+                                                                },
+                                                            )}
+                                                        </span>
                                                     </div>
                                                 </div>
                                             {/each}
@@ -546,7 +562,7 @@
                                         <div class="absolute inset-0 flex">
                                             {#each timelineDates as _, i}
                                                 <div
-                                                    class="flex-none w-[3%] border-l border-gray-100"
+                                                    class="flex-none w-[3%] border-l border-gray-200"
                                                 ></div>
                                             {/each}
                                         </div>
@@ -565,15 +581,15 @@
                                                             task.progress,
                                                         )} border-2 cursor-pointer transform transition-all duration-200 hover:scale-y-110 hover:shadow-md"
                                                         style="
-                                                            left: {getTaskOffset(
+                                                                left: {getTaskOffset(
                                                             task.start,
                                                             project?.start_date,
                                                         )}%;
-                                                            width: {getTaskWidth(
+                                                                width: {getTaskWidth(
                                                             task.start,
                                                             task.end,
                                                         )}%;
-                                                        "
+                                                            "
                                                     >
                                                         <div
                                                             class="px-3 py-1 truncate text-sm font-medium"
@@ -1055,31 +1071,15 @@
 {/if}
 
 <style>
-    :global(.gantt-container) {
-        height: 400px;
+    .gantt-container {
         width: 100%;
+        margin: 1rem 0;
+        overflow: hidden;
     }
 
-    .custom-scrollbar {
-        scrollbar-width: thin;
-        scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background-color: rgba(156, 163, 175, 0.5);
-        border-radius: 3px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background-color: rgba(156, 163, 175, 0.7);
+    .gantt-chart {
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
     }
 </style>
