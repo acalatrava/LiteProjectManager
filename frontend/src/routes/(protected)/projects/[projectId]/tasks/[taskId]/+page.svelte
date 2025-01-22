@@ -106,11 +106,17 @@
         if (!task) return;
 
         try {
-            task.status = newStatus as "pending" | "in_progress" | "completed";
-            await api.updateTask(taskId, task);
+            let newTask = task;
+            newTask.status = newStatus as
+                | "pending"
+                | "in_progress"
+                | "completed";
+            await api.updateTask(taskId, newTask);
+            task = newTask;
         } catch (err) {
             error = "Failed to update task status";
             console.error(err);
+            alert(error);
         }
     }
 
