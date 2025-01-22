@@ -502,7 +502,7 @@
         <!-- Gantt Chart -->
         {#if !loading && project && ganttTasks.length > 0}
             <div class="gantt-container">
-                <div class="gantt-chart" style="height: calc(100vh - 200px);">
+                <div class="gantt-chart">
                     <!-- Gantt chart content -->
                     <h2 class="text-base font-semibold leading-7 text-gray-900">
                         {$_("common.timeline")}
