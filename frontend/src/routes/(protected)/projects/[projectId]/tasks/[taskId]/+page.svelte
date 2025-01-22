@@ -106,8 +106,8 @@
         if (!task) return;
 
         try {
-            await api.updateTaskStatus(taskId, newStatus);
-            task.status = newStatus;
+            task.status = newStatus as "pending" | "in_progress" | "completed";
+            await api.updateTask(taskId, task);
         } catch (err) {
             error = "Failed to update task status";
             console.error(err);
