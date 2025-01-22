@@ -106,17 +106,18 @@
         if (!task) return;
 
         try {
-            let newTask = task;
-            newTask.status = newStatus as
-                | "pending"
-                | "in_progress"
-                | "completed";
-            await api.updateTask(taskId, newTask);
-            task = newTask;
+            task.status = newStatus as "pending" | "in_progress" | "completed";
+            await api.updateTask(taskId, task);
         } catch (err) {
             error = "Failed to update task status";
             console.error(err);
-            alert(error);
+            alert(
+                err instanceof Error
+                    ? err.message
+                    : "Failed to update task status",
+            );
+            // Reload task data to reflect the previous status
+            await loadTaskData();
         }
     }
 
@@ -734,10 +735,11 @@
                                                     <p
                                                         class="text-sm font-medium text-gray-900"
                                                     >
-                                                        {comment.user?.name ||
-                                                            comment.user
-                                                                ?.username ||
-                                                            "Unknown User"}
+                                                        {users.find(
+                                                            (u) =>
+                                                                u.id ===
+                                                                comment.user_id,
+                                                        )?.name || "Unknown"}
                                                     </p>
                                                     <p
                                                         class="text-xs text-gray-500"
