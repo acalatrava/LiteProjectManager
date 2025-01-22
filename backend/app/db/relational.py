@@ -469,8 +469,6 @@ class ProjectsTable:
             return False
 
     def is_project_member(self, user_id: str, project_id: str) -> bool:
-        print("project_id", project_id)
-        print("user_id", user_id)
         return ProjectMemberModel.select().where(
             (ProjectMemberModel.user_id == user_id) &
             (ProjectMemberModel.project_id == project_id)

@@ -97,6 +97,10 @@ class ProjectsEndpoint(BaseEndpoint):
         if not Projects.is_project_manager(userinfo.id, project_id) and userinfo.role != UserRole.ADMIN:
             raise HTTPException(status_code=403, detail="Only project managers can add members")
 
+        # Check if the user is already a member of the project
+        if Projects.is_project_member(member.user_id, project_id):
+            raise HTTPException(status_code=400, detail="User already a member of this project")
+
         added_member = Projects.add_project_member(project_id, member)
 
         # Send email notification to the new member
