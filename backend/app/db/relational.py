@@ -425,6 +425,10 @@ class ProjectsTable:
             return False
 
     def user_has_access(self, user_id: str, project_id: str) -> bool:
+        # Check if user is admin
+        if Users.is_admin(user_id):
+            return True
+
         return ProjectMemberModel.select().where(
             (ProjectMemberModel.user_id == user_id) &
             (ProjectMemberModel.project_id == project_id)

@@ -279,29 +279,26 @@
                         class="absolute inset-x-0 bottom-0 translate-y-full bg-gray-50/90 backdrop-blur-sm p-4 transition-transform duration-300 group-hover:translate-y-0"
                     >
                         <div class="flex justify-end space-x-3">
-                            {#if $user?.role === "admin"}
-                                <button
-                                    class="inline-flex items-center rounded-md bg-white/50 backdrop-blur-sm px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-                                    on:click={() =>
-                                        handleDeleteProject(project.id)}
+                            <button
+                                class="inline-flex items-center rounded-md bg-white/50 backdrop-blur-sm px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                                on:click={() => handleDeleteProject(project.id)}
+                            >
+                                <svg
+                                    class="mr-2 -ml-0.5 h-4 w-4"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
                                 >
-                                    <svg
-                                        class="mr-2 -ml-0.5 h-4 w-4"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                        />
-                                    </svg>
-                                    {$_("common.remove")}
-                                </button>
-                            {/if}
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                    />
+                                </svg>
+                                {$_("common.remove")}
+                            </button>
                             <a
                                 href="/projects/{project.id}"
                                 class="inline-flex items-center rounded-md bg-primary-600/90 backdrop-blur-sm px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
