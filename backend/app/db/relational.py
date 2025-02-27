@@ -107,8 +107,11 @@ class UsersTable:
 
     def is_admin(self, token: str) -> bool:
         # Get user by token
-        user = self.get_user_by_token(token)
-        return user.role == UserRole.ADMIN.value
+        try:
+            user = self.get_user_by_token(token)
+            return user.role == UserRole.ADMIN.value
+        except:
+            return False
 
     def get_user_by_username(self, username: str) -> Optional[UserInDB]:
         try:
