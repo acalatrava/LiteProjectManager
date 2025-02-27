@@ -45,7 +45,7 @@ class ProjectsEndpoint(BaseEndpoint):
     async def create_project(
         self,
         project: ProjectCreate = Body(...),
-        userinfo=Depends(admin_user_check)
+        userinfo=Depends(user_check)
     ) -> Project:
         return Projects.create_project(project, creator_id=userinfo.id)
 
@@ -53,18 +53,18 @@ class ProjectsEndpoint(BaseEndpoint):
         self,
         project_id: str = Path(...),
         edited_project: ProjectUpdate = Body(...),
-        userinfo=Depends(admin_user_check)
+        userinfo=Depends(user_check)
     ) -> Project:
         # First, get the project
         project = Projects.get_project(project_id)
-        print(project)
         if not project:
             raise HTTPException(status_code=404, detail="Project not found")
+        if not Projects.is_project_manager(userinfo.id, project_id) and userinfo.role != UserRole.ADMIN:
+            raise HTTPException(status_code=403, detail="Only project managers can update projects")
         # Then, update the keys in project from edited_project
         for key, value in edited_project.model_dump().items():
             if value is not None:
                 setattr(project, key, value)
-        print(project)
         updated = Projects.update_project(project_id, project)
         if not updated:
             raise HTTPException(status_code=404, detail="Project not found")
@@ -73,8 +73,10 @@ class ProjectsEndpoint(BaseEndpoint):
     async def delete_project(
         self,
         project_id: str = Path(...),
-        userinfo=Depends(admin_user_check)
+        userinfo=Depends(user_check)
     ) -> DefaultResponse:
+        if not Projects.is_project_manager(userinfo.id, project_id) and userinfo.role != UserRole.ADMIN:
+            raise HTTPException(status_code=403, detail="Only project managers can delete projects")
         if Projects.delete_project(project_id):
             return DefaultResponse(code=200, result="Project deleted successfully")
         raise HTTPException(status_code=404, detail="Project not found")
