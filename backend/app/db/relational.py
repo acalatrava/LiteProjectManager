@@ -113,6 +113,10 @@ class UsersTable:
         except:
             return False
 
+    def user_id_is_admin(self, user_id: str) -> bool:
+        user = User.get(User.id == user_id)
+        return user.role == UserRole.ADMIN.value
+
     def get_user_by_username(self, username: str) -> Optional[UserInDB]:
         try:
             user = User.get(User.username == username.lower())
@@ -429,7 +433,7 @@ class ProjectsTable:
 
     def user_has_access(self, user_id: str, project_id: str) -> bool:
         # Check if user is admin
-        if Users.is_admin(user_id):
+        if Users.user_id_is_admin(user_id):
             return True
 
         return ProjectMemberModel.select().where(

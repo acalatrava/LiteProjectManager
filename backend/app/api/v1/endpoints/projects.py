@@ -86,7 +86,7 @@ class ProjectsEndpoint(BaseEndpoint):
         project_id: str = Path(...),
         userinfo=Depends(user_check)
     ) -> List[ProjectMember]:
-        if not Projects.user_has_access(userinfo.id, project_id) and userinfo.role != UserRole.ADMIN:
+        if not Projects.user_has_access(userinfo.id, project_id):
             raise HTTPException(status_code=403, detail="No access to this project")
         return Projects.get_project_members(project_id)
 

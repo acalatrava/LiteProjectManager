@@ -26,7 +26,7 @@ class CommentsEndpoint(BaseEndpoint):
         if not task:
             raise HTTPException(status_code=404, detail="Task not found")
 
-        if not Projects.user_has_access(userinfo.id, task.project_id) and userinfo.role != UserRole.ADMIN:
+        if not Projects.user_has_access(userinfo.id, task.project_id):
             raise HTTPException(status_code=403, detail="No access to this task")
 
         return Comments.get_task_comments(task_id)
@@ -41,7 +41,7 @@ class CommentsEndpoint(BaseEndpoint):
         if not task:
             raise HTTPException(status_code=404, detail="Task not found")
 
-        if not Projects.user_has_access(userinfo.id, task.project_id) and userinfo.role != UserRole.ADMIN:
+        if not Projects.user_has_access(userinfo.id, task.project_id):
             raise HTTPException(status_code=403, detail="No access to this task")
 
         return Comments.create_comment(comment, userinfo.id)
