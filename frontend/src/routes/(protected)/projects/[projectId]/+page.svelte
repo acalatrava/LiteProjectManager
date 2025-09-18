@@ -101,6 +101,9 @@
                         (member) => member.user_id === user.id,
                     ),
             );
+
+            // Filter out not active users
+            availableUsers = availableUsers.filter((user) => user.is_active);
         } catch (err) {
             error = "Failed to load project data";
             console.error(err);
