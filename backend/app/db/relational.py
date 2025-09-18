@@ -623,7 +623,7 @@ class TasksTable:
         except TaskModel.DoesNotExist:
             return None
 
-    def get_all_tasks(self, project_id: str) -> List[TaskSchema]:
+    def get_all_tasks(self) -> List[TaskSchema]:
         return [
             TaskSchema.model_validate({
                 "id": t.id,
@@ -645,7 +645,7 @@ class TasksTable:
                     } for st in t.get_subtasks()
                 ]
             })
-            for t in TaskModel.select().where(TaskModel.project_id == project_id)
+            for t in TaskModel.select()
         ]
 
     def get_user_tasks(self, user_id: str, project_id: str) -> List[TaskSchema]:
@@ -666,9 +666,10 @@ class TasksTable:
                 "subtasks": []
             })
             for t in TaskModel.select().where(
-                (TaskModel.assigned_to_id == user_id) |
-                (TaskModel.created_by_id == user_id) |
-                (TaskModel.project_id == project_id)
+                ((TaskModel.assigned_to_id == user_id) |
+                 (TaskModel.created_by_id == user_id)) &
+                ((TaskModel.project_id == project_id) &
+                 (TaskModel.parent_task_id.is_null()))
             )
         ]
 

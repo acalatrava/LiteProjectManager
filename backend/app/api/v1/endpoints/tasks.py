@@ -35,7 +35,7 @@ class TasksEndpoint(BaseEndpoint):
 
     async def get_tasks(self, project_id: str = Query(...), userinfo=Depends(user_check)) -> List[Task]:
         if userinfo.is_admin:
-            tasks = Tasks.get_all_tasks(project_id)
+            tasks = Tasks.get_project_tasks(project_id)
         else:
             tasks = Tasks.get_user_tasks(userinfo.id, project_id)
 
