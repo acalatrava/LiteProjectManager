@@ -54,6 +54,14 @@ class UsersEndpoint(BaseEndpoint):
             description="Admin only: Create a new user"
         )(self.create_user)
 
+        # Reset user password
+        self.router.post(
+            "/{user_id}/reset",
+            response_model=DefaultResponse,
+            summary="Reset user password",
+            description="Admin only: Reset user password and send new credentials via email"
+        )(self.reset_user)
+
     async def get_users(
         self,
         userinfo=Depends(user_check),
@@ -203,3 +211,46 @@ class UsersEndpoint(BaseEndpoint):
             print(f"Error sending email: {str(e)}")
 
         return new_user
+
+    async def reset_user(
+        self,
+        user_id: str = Path(..., title="The ID of the user to reset password"),
+        admin=Depends(admin_user_check)
+    ) -> DefaultResponse:
+        """
+        Reset user password and send new credentials via email
+        """
+        # Check if user exists
+        user = Users.get_user_by_id(user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+
+        # Generate new random password
+        new_password = self.generate_random_password()
+
+        # Update user with new password
+        updated_user = Users.update_user_by_id(
+            user_id,
+            {"password": new_password}
+        )
+
+        if not updated_user:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Error resetting password"
+            )
+
+        # Send email with new credentials
+        try:
+            EmailService.send_new_user_credentials(
+                username=user.username,
+                password=new_password
+            )
+        except Exception as e:
+            # Log the error but don't fail the request
+            print(f"Error sending reset email: {str(e)}")
+
+        return DefaultResponse(code=200, result="Password reset successfully and sent via email")
