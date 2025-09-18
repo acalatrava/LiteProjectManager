@@ -118,7 +118,9 @@
             },
             "actions": {
                 "edit": "Editar",
-                "delete": "Eliminar"
+                "delete": "Eliminar",
+                "create": "Crear Usuario",
+                "reset": "Restablecer Contraseña"
             }
         },
         "deleteModal": {
@@ -136,11 +138,35 @@
             "save": "Guardar",
             "cancel": "Cancelar"
         },
+        "createModal": {
+            "title": "Crear Nuevo Usuario",
+            "fields": {
+                "email": "Correo",
+                "fullName": "Nombre Completo",
+                "role": "Rol"
+            },
+            "create": "Crear Usuario",
+            "cancel": "Cancelar"
+        },
+        "resetModal": {
+            "title": "Restablecer Contraseña",
+            "message": "¿Está seguro de que desea restablecer la contraseña de este usuario? Se generará una nueva contraseña y se enviará a su correo electrónico.",
+            "confirm": "Restablecer Contraseña",
+            "cancel": "Cancelar"
+        },
         "errors": {
             "loadFailed": "Error al cargar usuarios",
             "updateFailed": "Error al actualizar usuario",
             "deleteFailed": "Error al eliminar usuario",
-            "updateRoleFailed": "Error al actualizar el rol del usuario"
+            "updateRoleFailed": "Error al actualizar el rol del usuario",
+            "createFailed": "Error al crear usuario",
+            "resetFailed": "Error al restablecer contraseña"
+        },
+        "success": {
+            "userUpdated": "Usuario actualizado correctamente",
+            "userDeleted": "Usuario eliminado correctamente",
+            "userCreated": "Usuario creado correctamente",
+            "passwordReset": "Contraseña restablecida correctamente y enviada por correo"
         }
     },
     "profile": {

@@ -1,7 +1,7 @@
 import type { AuthResponse, RegisterData, User } from '$lib/types/user';
 import type { Sample, SearchResult } from '$lib/types/sample';
 import { env } from '$env/dynamic/public';
-import type { Project, ProjectCreate, ProjectMember, Task, TaskCreate, GanttTask, Comment, CommentCreate } from '$lib/types/project';
+import type { Project, ProjectCreate, ProjectMember, Task, GanttTask, Comment, CommentCreate } from '$lib/types/project';
 
 const API_URL = import.meta.env.VITE_API_URL || env.PUBLIC_API_URL;
 
@@ -50,7 +50,7 @@ class ApiService {
             }
 
             const error = new Error(errorDetail);
-            error.response = response;
+            (error as any).response = response;
             throw error;
         }
         return response;
@@ -363,6 +363,15 @@ class ApiService {
 
         await this.handleResponse(response);
         return response.json();
+    }
+
+    async resetUserPassword(userId: string): Promise<void> {
+        const response = await fetch(`${API_URL}/api/v1/users/${userId}/reset`, {
+            method: 'POST',
+            headers: this.getHeaders(),
+        });
+
+        await this.handleResponse(response);
     }
 
     async createSubtask(parentTaskId: string, task: Omit<TaskCreate, 'parent_task_id'>): Promise<Task> {

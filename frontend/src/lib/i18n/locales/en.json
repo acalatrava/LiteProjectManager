@@ -119,7 +119,8 @@
             "actions": {
                 "edit": "Edit",
                 "delete": "Delete",
-                "create": "Create User"
+                "create": "Create User",
+                "reset": "Reset Password"
             }
         },
         "deleteModal": {
@@ -147,12 +148,25 @@
             "create": "Create User",
             "cancel": "Cancel"
         },
+        "resetModal": {
+            "title": "Reset Password",
+            "message": "Are you sure you want to reset this user's password? A new password will be generated and sent to their email.",
+            "confirm": "Reset Password",
+            "cancel": "Cancel"
+        },
         "errors": {
             "loadFailed": "Failed to load users",
             "updateFailed": "Failed to update user",
             "deleteFailed": "Failed to delete user",
             "updateRoleFailed": "Failed to update user role",
-            "createFailed": "Failed to create user"
+            "createFailed": "Failed to create user",
+            "resetFailed": "Failed to reset password"
+        },
+        "success": {
+            "userUpdated": "User updated successfully",
+            "userDeleted": "User deleted successfully",
+            "userCreated": "User created successfully",
+            "passwordReset": "Password reset successfully and sent via email"
         }
     },
     "profile": {

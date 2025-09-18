@@ -2,6 +2,7 @@
     import { onMount } from "svelte";
     import { api } from "$lib/services/api";
     import type { User } from "$lib/types/user";
+    import { UserRole } from "$lib/types/user";
     import { _ } from "svelte-i18n";
     import { fade } from "svelte/transition";
     import { Functions } from "$lib/services/functions";
@@ -15,12 +16,13 @@
     let showDeleteModal = false;
     let showEditModal = false;
     let showCreateModal = false;
+    let showResetModal = false;
     let selectedUser: User | null = null;
 
     // Edit form data
     let editForm = {
         name: "",
-        role: "",
+        role: UserRole.USER,
         is_active: true,
     };
 
@@ -63,6 +65,11 @@
         showDeleteModal = true;
     }
 
+    function openResetModal(user: User) {
+        selectedUser = user;
+        showResetModal = true;
+    }
+
     async function handleEditSubmit() {
         if (!selectedUser) return;
 
@@ -71,7 +78,7 @@
             await loadUsers();
             showEditModal = false;
             success = $_("admin.userList.success.userUpdated");
-        } catch (err) {
+        } catch (err: any) {
             error = err.message || $_("admin.errors.updateFailed");
         }
     }
@@ -84,7 +91,7 @@
             await loadUsers();
             showDeleteModal = false;
             success = $_("admin.userList.success.userDeleted");
-        } catch (err) {
+        } catch (err: any) {
             error = err.message || $_("admin.errors.deleteFailed");
         }
     }
@@ -94,15 +101,27 @@
             await api.createUser(createForm);
             await loadUsers();
             showCreateModal = false;
-            success = $_("admin.userList.success.userCreated");
+            success = $_("admin.success.userCreated");
             // Reset form
             createForm = {
                 email: "",
                 full_name: "",
                 role: "user",
             };
-        } catch (err) {
+        } catch (err: any) {
             error = err.message || $_("admin.errors.createFailed");
+        }
+    }
+
+    async function handleResetConfirm() {
+        if (!selectedUser) return;
+
+        try {
+            await api.resetUserPassword(selectedUser.id);
+            showResetModal = false;
+            success = $_("admin.success.passwordReset");
+        } catch (err: any) {
+            error = err.message || $_("admin.errors.resetFailed");
         }
     }
 </script>
@@ -249,18 +268,26 @@
                             <td
                                 class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
                             >
-                                <button
-                                    on:click={() => openEditModal(user)}
-                                    class="text-primary-600 hover:text-primary-900"
-                                >
-                                    {$_("admin.userList.actions.edit")}
-                                </button>
-                                <button
-                                    on:click={() => openDeleteModal(user)}
-                                    class="text-red-600 hover:text-red-900"
-                                >
-                                    {$_("admin.userList.actions.delete")}
-                                </button>
+                                <div class="flex justify-end space-x-4">
+                                    <button
+                                        on:click={() => openEditModal(user)}
+                                        class="text-primary-600 hover:text-primary-900"
+                                    >
+                                        {$_("admin.userList.actions.edit")}
+                                    </button>
+                                    <button
+                                        on:click={() => openResetModal(user)}
+                                        class="text-yellow-600 hover:text-yellow-900"
+                                    >
+                                        {$_("admin.userList.actions.reset")}
+                                    </button>
+                                    <button
+                                        on:click={() => openDeleteModal(user)}
+                                        class="text-red-600 hover:text-red-900"
+                                    >
+                                        {$_("admin.userList.actions.delete")}
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     {/each}
@@ -470,6 +497,39 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+{/if}
+
+<!-- Reset Password Modal -->
+{#if showResetModal}
+    <div class="fixed inset-0 z-50 overflow-y-auto" transition:fade>
+        <div class="flex min-h-screen items-center justify-center p-4">
+            <div
+                class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+            ></div>
+            <div class="relative rounded-lg bg-white p-8 shadow-xl">
+                <h3 class="text-lg font-medium text-gray-900">
+                    {$_("admin.resetModal.title")}
+                </h3>
+                <p class="text-sm text-gray-500">
+                    {$_("admin.resetModal.message")}
+                </p>
+                <div class="mt-6 flex justify-end space-x-4">
+                    <button
+                        on:click={() => (showResetModal = false)}
+                        class="rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                        {$_("admin.resetModal.cancel")}
+                    </button>
+                    <button
+                        on:click={handleResetConfirm}
+                        class="rounded-md bg-yellow-600 px-4 py-2 text-sm font-medium text-white hover:bg-yellow-700"
+                    >
+                        {$_("admin.resetModal.confirm")}
+                    </button>
+                </div>
             </div>
         </div>
     </div>
