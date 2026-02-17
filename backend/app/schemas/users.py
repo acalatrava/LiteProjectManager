@@ -38,6 +38,7 @@ class UserUpdate(BaseModel):
 class UserInDB(UserBase):
     id: str
     created_at: datetime
+    password_reset_required: bool = False
 
     @property
     def is_admin(self) -> bool:

@@ -121,7 +121,11 @@ async def login(
 
     if result:
         user, token = result
-        return {"access_token": token, "token_type": "bearer"}
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+            "password_reset_required": user.password_reset_required
+        }
     else:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

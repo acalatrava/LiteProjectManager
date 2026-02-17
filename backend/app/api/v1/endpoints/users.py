@@ -62,6 +62,14 @@ class UsersEndpoint(BaseEndpoint):
             description="Admin only: Reset user password and send new credentials via email"
         )(self.reset_user)
 
+        # Reset ALL user passwords (admin only)
+        self.router.post(
+            "/reset-all",
+            response_model=DefaultResponse,
+            summary="Reset all user passwords",
+            description="Admin only: Reset passwords for all users and send new credentials via email"
+        )(self.reset_all_users)
+
     async def get_users(
         self,
         userinfo=Depends(user_check),
@@ -255,3 +263,33 @@ class UsersEndpoint(BaseEndpoint):
             print(f"Error sending reset email: {str(e)}")
 
         return DefaultResponse(code=200, result="Password reset successfully and sent via email")
+
+    async def reset_all_users(
+        self,
+        admin=Depends(admin_user_check)
+    ) -> DefaultResponse:
+        """
+        Reset passwords for all users and send new credentials via email (Admin only)
+        """
+        results = Users.reset_all_passwords()
+
+        # Send emails with new credentials
+        email_errors = 0
+        for user_id, (username, new_password) in results.items():
+            try:
+                EmailService.send_new_user_credentials(
+                    username=username,
+                    password=new_password
+                )
+            except Exception as e:
+                email_errors += 1
+                print(f"Error sending reset email to {username}: {str(e)}")
+
+        total = len(results)
+        if email_errors > 0:
+            return DefaultResponse(
+                code=200,
+                result=f"Reset {total} passwords. {email_errors} email(s) failed to send."
+            )
+        return DefaultResponse(code=200, result=f"Reset {total} passwords successfully and sent via email")
+

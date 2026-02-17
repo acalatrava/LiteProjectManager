@@ -380,6 +380,28 @@ class ApiService {
             parent_task_id: parentTaskId
         });
     }
+    async resetAllPasswords(): Promise<void> {
+        const response = await fetch(`${API_URL}/api/v1/users/reset-all`, {
+            method: 'POST',
+            headers: this.getHeaders(),
+        });
+
+        await this.handleResponse(response);
+    }
+
+    async changePassword(currentPassword: string, newPassword: string): Promise<User> {
+        const response = await fetch(`${API_URL}/api/v1/userinfo/`, {
+            method: 'PATCH',
+            headers: this.getHeaders(),
+            body: JSON.stringify({
+                current_password: currentPassword,
+                new_password: newPassword,
+            }),
+        });
+
+        await this.handleResponse(response);
+        return response.json();
+    }
 }
 
 export const api = new ApiService(); 

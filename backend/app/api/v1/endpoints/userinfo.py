@@ -49,22 +49,24 @@ class UserInfoEndpoint(BaseEndpoint):
 
         # If password change is requested, verify current password
         if 'new_password' in update_data:
-            if 'current_password' not in update_data:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Current password is required"
-                )
+            # Skip current password check if forced reset is active
+            if not userinfo.password_reset_required:
+                if 'current_password' not in update_data:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Current password is required"
+                    )
 
-            # Verify current password
-            if not Users.verify_password(userinfo.username, update_data['current_password']):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Current password is incorrect"
-                )
+                # Verify current password
+                if not Users.verify_password(userinfo.username, update_data['current_password']):
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Current password is incorrect"
+                    )
 
             # Replace new_password key with password for the update
             update_data['password'] = update_data.pop('new_password')
-            update_data.pop('current_password')  # Remove current_password as it's not needed for update
+            update_data.pop('current_password', None)  # Remove current_password if present
 
         # Update user
         updated_user = Users.update_user_by_id(

@@ -10,11 +10,13 @@ export interface User {
     role: UserRole;
     created_at: string;
     is_active: boolean;
+    password_reset_required: boolean;
 }
 
 export interface AuthResponse {
     access_token: string;
     token_type: string;
+    password_reset_required?: boolean;
 }
 
 export interface RegisterData {

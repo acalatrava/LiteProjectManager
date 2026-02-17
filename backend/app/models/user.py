@@ -20,6 +20,7 @@ class User(BaseModel):
     created_at = DateTimeField(default=datetime.datetime.now)
     updated_at = DateTimeField(default=datetime.datetime.now)
     is_active = BooleanField(default=True)
+    password_reset_required = BooleanField(default=False)
 
     def is_admin(self):
         return self.role == UserRole.ADMIN.value
@@ -31,6 +32,7 @@ class User(BaseModel):
             role=self.role,
             name=self.name,
             created_at=self.created_at,
-            is_active=self.is_active
+            is_active=self.is_active,
+            password_reset_required=self.password_reset_required
         )
         return user_schema.model_dump()

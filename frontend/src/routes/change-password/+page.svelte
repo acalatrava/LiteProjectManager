@@ -4,31 +4,42 @@
     import { api } from "$lib/services/api";
     import { _ } from "svelte-i18n";
 
-    let username = "";
-    let password = "";
+    let newPassword = "";
+    let confirmPassword = "";
     let error = "";
     let loading = false;
 
     async function handleSubmit() {
-        loading = true;
         error = "";
+
+        if (newPassword.length < 8) {
+            error = $_("changePassword.errors.tooShort");
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            error = $_("changePassword.errors.mismatch");
+            return;
+        }
+
+        loading = true;
         try {
-            const authResponse = await api.login(username, password);
-            localStorage.setItem("token", authResponse.access_token);
+            await api.updateProfile({ new_password: newPassword } as any);
 
-            const userData = await api.getCurrentUser();
-            user.set(userData);
+            // Password change invalidates all tokens, so re-login to get a fresh one
+            const username = $user?.username;
+            if (username) {
+                const authResponse = await api.login(username, newPassword);
+                localStorage.setItem("token", authResponse.access_token);
 
-            // Check if password reset is required
-            if (authResponse.password_reset_required || userData.password_reset_required) {
-                passwordResetRequired.set(true);
-                goto("/change-password");
-            } else {
-                passwordResetRequired.set(false);
-                goto("/projects");
+                const userData = await api.getCurrentUser();
+                user.set(userData);
             }
-        } catch (err) {
-            error = "Invalid credentials";
+
+            passwordResetRequired.set(false);
+            goto("/projects");
+        } catch (err: any) {
+            error = err.message || $_("changePassword.errors.failed");
             console.error(err);
         } finally {
             loading = false;
@@ -40,17 +51,27 @@
     class="min-h-[80vh] flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-gray-50"
 >
     <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
+            <svg
+                class="h-6 w-6 text-yellow-600"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                />
+            </svg>
+        </div>
         <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            {$_("auth.loginTitle")}
+            {$_("changePassword.title")}
         </h2>
         <p class="mt-2 text-center text-sm text-gray-600">
-            {$_("auth.noAccount")}
-            <a
-                href="/register"
-                class="font-medium text-primary-600 hover:text-primary-500"
-            >
-                {$_("auth.signUp")}
-            </a>
+            {$_("changePassword.description")}
         </p>
     </div>
 
@@ -59,36 +80,43 @@
             <form on:submit|preventDefault={handleSubmit} class="space-y-6">
                 <div>
                     <label
-                        for="username"
+                        for="new-password"
                         class="block text-sm font-medium text-gray-700"
                     >
-                        {$_("auth.email")}
+                        {$_("changePassword.newPassword")}
                     </label>
                     <div class="mt-1">
                         <input
-                            id="username"
-                            type="email"
-                            bind:value={username}
+                            id="new-password"
+                            type="password"
+                            bind:value={newPassword}
                             required
+                            minlength="8"
                             class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                            placeholder="••••••••"
                         />
                     </div>
+                    <p class="mt-1 text-sm text-gray-500">
+                        {$_("changePassword.hint")}
+                    </p>
                 </div>
 
                 <div>
                     <label
-                        for="password"
+                        for="confirm-password"
                         class="block text-sm font-medium text-gray-700"
                     >
-                        {$_("auth.password")}
+                        {$_("changePassword.confirmPassword")}
                     </label>
                     <div class="mt-1">
                         <input
-                            id="password"
+                            id="confirm-password"
                             type="password"
-                            bind:value={password}
+                            bind:value={confirmPassword}
                             required
+                            minlength="8"
                             class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                            placeholder="••••••••"
                         />
                     </div>
                 </div>
@@ -148,7 +176,7 @@
                             </svg>
                             {$_("common.loading")}
                         {:else}
-                            {$_("auth.signIn")}
+                            {$_("changePassword.submit")}
                         {/if}
                     </button>
                 </div>

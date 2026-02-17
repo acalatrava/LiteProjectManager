@@ -1,11 +1,16 @@
 <script lang="ts">
     import { page } from "$app/stores";
-    import { user } from "$lib/stores/auth";
+    import { user, passwordResetRequired } from "$lib/stores/auth";
     import { goto } from "$app/navigation";
     import { _ } from "svelte-i18n";
     import { fly } from "svelte/transition";
 
     let isSidebarOpen = false;
+
+    // Redirect to change-password if required
+    $: if ($user?.password_reset_required || $passwordResetRequired) {
+        goto("/change-password");
+    }
 
     const navigation = [
         {

@@ -63,6 +63,19 @@
         "signUp": "Registrarse",
         "signIn": "Iniciar sesión"
     },
+    "changePassword": {
+        "title": "Cambiar su Contraseña",
+        "description": "Su contraseña debe actualizarse por razones de seguridad. Por favor, elija una nueva contraseña.",
+        "newPassword": "Nueva Contraseña",
+        "confirmPassword": "Confirmar Nueva Contraseña",
+        "hint": "Debe tener al menos 8 caracteres",
+        "submit": "Actualizar Contraseña",
+        "errors": {
+            "tooShort": "La contraseña debe tener al menos 8 caracteres",
+            "mismatch": "Las contraseñas no coinciden",
+            "failed": "Error al actualizar la contraseña"
+        }
+    },
     "dashboard": {
         "welcome": "Bienvenido a su Panel",
         "stats": "Estadísticas",
@@ -120,7 +133,8 @@
                 "edit": "Editar",
                 "delete": "Eliminar",
                 "create": "Crear Usuario",
-                "reset": "Restablecer Contraseña"
+                "reset": "Restablecer Contraseña",
+                "resetAll": "Restablecer Todas las Contraseñas"
             }
         },
         "deleteModal": {
@@ -154,19 +168,27 @@
             "confirm": "Restablecer Contraseña",
             "cancel": "Cancelar"
         },
+        "resetAllModal": {
+            "title": "Restablecer Todas las Contraseñas",
+            "message": "¿Está seguro de que desea restablecer TODAS las contraseñas de usuarios? Se generarán nuevas contraseñas y se enviarán por correo a cada usuario. Todos los usuarios deberán cambiar su contraseña en el próximo inicio de sesión.",
+            "confirm": "Restablecer Todas las Contraseñas",
+            "cancel": "Cancelar"
+        },
         "errors": {
             "loadFailed": "Error al cargar usuarios",
             "updateFailed": "Error al actualizar usuario",
             "deleteFailed": "Error al eliminar usuario",
             "updateRoleFailed": "Error al actualizar el rol del usuario",
             "createFailed": "Error al crear usuario",
-            "resetFailed": "Error al restablecer contraseña"
+            "resetFailed": "Error al restablecer contraseña",
+            "resetAllFailed": "Error al restablecer todas las contraseñas"
         },
         "success": {
             "userUpdated": "Usuario actualizado correctamente",
             "userDeleted": "Usuario eliminado correctamente",
             "userCreated": "Usuario creado correctamente",
-            "passwordReset": "Contraseña restablecida correctamente y enviada por correo"
+            "passwordReset": "Contraseña restablecida correctamente y enviada por correo",
+            "allPasswordsReset": "Todas las contraseñas restablecidas correctamente y enviadas por correo"
         }
     },
     "profile": {

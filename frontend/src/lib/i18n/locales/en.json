@@ -63,6 +63,19 @@
         "signUp": "Sign up",
         "signIn": "Sign in"
     },
+    "changePassword": {
+        "title": "Change Your Password",
+        "description": "Your password needs to be updated for security reasons. Please choose a new password.",
+        "newPassword": "New Password",
+        "confirmPassword": "Confirm New Password",
+        "hint": "Must be at least 8 characters",
+        "submit": "Update Password",
+        "errors": {
+            "tooShort": "Password must be at least 8 characters",
+            "mismatch": "Passwords do not match",
+            "failed": "Failed to update password"
+        }
+    },
     "dashboard": {
         "welcome": "Welcome to your Dashboard",
         "stats": "Statistics",
@@ -120,7 +133,8 @@
                 "edit": "Edit",
                 "delete": "Delete",
                 "create": "Create User",
-                "reset": "Reset Password"
+                "reset": "Reset Password",
+                "resetAll": "Reset All Passwords"
             }
         },
         "deleteModal": {
@@ -154,19 +168,27 @@
             "confirm": "Reset Password",
             "cancel": "Cancel"
         },
+        "resetAllModal": {
+            "title": "Reset All Passwords",
+            "message": "Are you sure you want to reset ALL user passwords? New passwords will be generated and emailed to every user. All users will be required to change their password on next login.",
+            "confirm": "Reset All Passwords",
+            "cancel": "Cancel"
+        },
         "errors": {
             "loadFailed": "Failed to load users",
             "updateFailed": "Failed to update user",
             "deleteFailed": "Failed to delete user",
             "updateRoleFailed": "Failed to update user role",
             "createFailed": "Failed to create user",
-            "resetFailed": "Failed to reset password"
+            "resetFailed": "Failed to reset password",
+            "resetAllFailed": "Failed to reset all passwords"
         },
         "success": {
             "userUpdated": "User updated successfully",
             "userDeleted": "User deleted successfully",
             "userCreated": "User created successfully",
-            "passwordReset": "Password reset successfully and sent via email"
+            "passwordReset": "Password reset successfully and sent via email",
+            "allPasswordsReset": "All passwords reset successfully and sent via email"
         }
     },
     "profile": {

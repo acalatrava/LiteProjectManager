@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
 import bcrypt
+import hashlib
 import re
 import uuid
 from typing import List, Optional
 from playhouse.shortcuts import model_to_dict
+from peewee import BooleanField
 
 from app.models.user import User
 from app.schemas.users import UserRole, UserInDB
@@ -28,6 +30,32 @@ class UsersTable:
     def __init__(self):
         with get_db():
             DB.create_tables([User, AuthToken])
+            # Migration: add password_reset_required column if missing
+            migrator = self._get_migrator()
+            if migrator:
+                try:
+                    from playhouse.migrate import migrate as run_migrate
+                    run_migrate(
+                        migrator.add_column('user', 'password_reset_required',
+                                            BooleanField(default=False))
+                    )
+                except Exception:
+                    # Column already exists or migration not needed
+                    pass
+
+    def _get_migrator(self):
+        try:
+            from playhouse.migrate import SqliteMigrator, PostgresqlMigrator, MySQLMigrator
+            db_type = type(DB).__name__.lower()
+            if 'sqlite' in db_type:
+                return SqliteMigrator(DB)
+            elif 'postgres' in db_type:
+                return PostgresqlMigrator(DB)
+            elif 'mysql' in db_type:
+                return MySQLMigrator(DB)
+        except ImportError:
+            pass
+        return None
 
     def insert_new_user(
         self, username: str, password: str, role: str = UserRole.USER.value, name: str = ''
@@ -140,8 +168,38 @@ class UsersTable:
             if not user.is_active:
                 return None
 
-            if not bcrypt.checkpw(password.encode(), user.password.encode()):
+            password_valid = False
+            is_legacy_hash = False
+
+            # Try bcrypt first
+            try:
+                if bcrypt.checkpw(password.encode(), user.password.encode()):
+                    password_valid = True
+            except (ValueError, AttributeError):
+                # Not a valid bcrypt hash — try legacy SHA-256
+                pass
+
+            # Fallback: legacy SHA-256(salt + password)
+            if not password_valid and user.salt:
+                legacy_hash = hashlib.sha256((user.salt + password).encode()).hexdigest()
+                if user.password == legacy_hash:
+                    password_valid = True
+                    is_legacy_hash = True
+
+            if not password_valid:
                 return None
+
+            # Auto-migrate legacy hash to bcrypt
+            if is_legacy_hash:
+                new_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+                User.update(
+                    password=new_hash,
+                    salt='',
+                    password_reset_required=True,
+                    updated_at=datetime.now()
+                ).where(User.id == user.id).execute()
+                # Refresh user object
+                user = User.get(User.id == user.id)
 
             # Create new auth token
             token = self.create_auth_token(user.id)
@@ -151,6 +209,7 @@ class UsersTable:
             return UserInDB(**user.to_dict()), token
 
         except Exception as e:
+            print(f"Error in login: {e}")
             return None
 
     def get_users(self, skip: int = 0, limit: int = 50) -> List[UserInDB]:
@@ -179,6 +238,8 @@ class UsersTable:
                 updated['password'] = bcrypt.hashpw(updated['password'].encode(), bcrypt.gensalt()).decode()
                 # Remove legacy salt field if present
                 updated.pop('salt', None)
+                # Clear the password_reset_required flag
+                updated['password_reset_required'] = False
                 # Invalidate all existing auth tokens for this user
                 AuthToken.update(is_active=False).where(AuthToken.user_id == id).execute()
 
@@ -234,9 +295,39 @@ class UsersTable:
     def verify_password(self, username: str, password: str) -> bool:
         try:
             user = User.get(User.username == username.lower())
-            return bcrypt.checkpw(password.encode(), user.password.encode())
+            # Try bcrypt first
+            try:
+                if bcrypt.checkpw(password.encode(), user.password.encode()):
+                    return True
+            except (ValueError, AttributeError):
+                pass
+            # Fallback: legacy SHA-256
+            if user.salt:
+                legacy_hash = hashlib.sha256((user.salt + password).encode()).hexdigest()
+                return user.password == legacy_hash
+            return False
         except User.DoesNotExist:
             return False
+
+    def reset_all_passwords(self) -> dict:
+        """Reset passwords for all users. Returns {user_id: (username, new_password)}."""
+        import secrets
+        import string
+        results = {}
+        alphabet = string.ascii_letters + string.digits + '!@#$%&*'
+        for user in User.select():
+            new_pw = ''.join(secrets.choice(alphabet) for _ in range(12))
+            hashed = bcrypt.hashpw(new_pw.encode(), bcrypt.gensalt()).decode()
+            User.update(
+                password=hashed,
+                salt='',
+                password_reset_required=True,
+                updated_at=datetime.now()
+            ).where(User.id == user.id).execute()
+            # Invalidate existing tokens
+            AuthToken.update(is_active=False).where(AuthToken.user_id == user.id).execute()
+            results[user.id] = (user.username, new_pw)
+        return results
 
     def create_auth_token(self, user_id: str) -> Optional[str]:
         try:
