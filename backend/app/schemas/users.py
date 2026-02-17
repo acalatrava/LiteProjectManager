@@ -20,17 +20,17 @@ class UserBase(BaseModel):
 
 class UserCreate(BaseModel):
     email: EmailStr
-    full_name: str
+    full_name: constr(min_length=1, max_length=200)
     role: UserRole = UserRole.USER
 
 
 class UserUpdate(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    name: Optional[str] = None
-    password: Optional[str] = None
+    name: Optional[constr(min_length=1, max_length=200)] = None
+    password: Optional[constr(min_length=8)] = None
     current_password: Optional[str] = None
-    new_password: Optional[str] = None
+    new_password: Optional[constr(min_length=8)] = None
     role: Optional[UserRole] = None
     is_active: Optional[bool] = None
 

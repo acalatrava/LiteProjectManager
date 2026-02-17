@@ -34,6 +34,10 @@ class TasksEndpoint(BaseEndpoint):
         return task
 
     async def get_tasks(self, project_id: str = Query(...), userinfo=Depends(user_check)) -> List[Task]:
+        # Verify user has access to the project
+        if not (userinfo.is_admin or Projects.user_has_access(userinfo.id, project_id)):
+            raise HTTPException(status_code=403, detail="No access to this project")
+
         if userinfo.is_admin:
             tasks = Tasks.get_project_tasks(project_id)
         else:
@@ -67,26 +71,33 @@ class TasksEndpoint(BaseEndpoint):
 
         # Check project status and update if needed
         project = Projects.get_project(task.project_id)
-        if project.status == "completed":
+        if project and project.status == "completed":
             Projects.update_project_status(task.project_id, "in_progress")
             # Notify project members about project being reopened
-            project_members = Projects.get_project_members(task.project_id)
-            member_ids = [member.user_id for member in project_members]
-            member_users = [Users.get_user_by_id(member_id) for member_id in member_ids]
-            member_emails = [user.username for user in member_users]
-            EmailService.notify_project_reopened(member_emails, project.name)
+            try:
+                project_members = Projects.get_project_members(task.project_id)
+                member_ids = [member.user_id for member in project_members]
+                member_users = [Users.get_user_by_id(mid) for mid in member_ids]
+                member_emails = [u.username for u in member_users if u is not None]
+                if member_emails:
+                    EmailService.notify_project_reopened(member_emails, project.name)
+            except Exception as e:
+                print(f"Error sending project reopened notification: {e}")
 
         # Send email notification if task is assigned
         if created_task.assigned_to_id:
-            assigned_user = Users.get_user_by_id(created_task.assigned_to_id)
-            project = Projects.get_project(created_task.project_id)
-            task_url = f"{SERVER_URL}/projects/{created_task.project_id}/tasks/{created_task.id}"
-            EmailService.notify_task_assignment(
-                assigned_user.username,
-                created_task.name,
-                project.name,
-                task_url
-            )
+            try:
+                assigned_user = Users.get_user_by_id(created_task.assigned_to_id)
+                if assigned_user and project:
+                    task_url = f"{SERVER_URL}/projects/{created_task.project_id}/tasks/{created_task.id}"
+                    EmailService.notify_task_assignment(
+                        assigned_user.username,
+                        created_task.name,
+                        project.name,
+                        task_url
+                    )
+            except Exception as e:
+                print(f"Error sending task assignment notification: {e}")
 
         return created_task
 
@@ -104,6 +115,13 @@ class TasksEndpoint(BaseEndpoint):
                 Projects.is_project_manager(userinfo.id, current_task.project_id) or
                 current_task.assigned_to_id == userinfo.id):
             raise HTTPException(status_code=403, detail="Not enough permissions")
+
+        # Prevent moving tasks between projects (security: cross-project data leak)
+        if task.project_id and task.project_id != current_task.project_id:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot move tasks between projects"
+            )
 
         try:
             updated = Tasks.update_task(task_id, task)
@@ -125,15 +143,18 @@ class TasksEndpoint(BaseEndpoint):
                 project = Projects.get_project(current_task.project_id)
                 new_status = None
 
-                if all_completed and project.status != "completed":
+                if project and all_completed and project.status != "completed":
                     new_status = "completed"
                     # Get project members for notification
-                    project_members = Projects.get_project_members(current_task.project_id)
-                    member_ids = [member.user_id for member in project_members]
-                    member_users = [Users.get_user_by_id(member_id) for member_id in member_ids]
-                    member_emails = [user.username for user in member_users]
-                    # Notify about project completion
-                    EmailService.notify_project_completed(member_emails, project.name)
+                    try:
+                        project_members = Projects.get_project_members(current_task.project_id)
+                        member_ids = [member.user_id for member in project_members]
+                        member_users = [Users.get_user_by_id(mid) for mid in member_ids]
+                        member_emails = [u.username for u in member_users if u is not None]
+                        if member_emails:
+                            EmailService.notify_project_completed(member_emails, project.name)
+                    except Exception as e:
+                        print(f"Error sending project completed notification: {e}")
                 elif has_in_progress:
                     new_status = "in_progress"
 
@@ -142,30 +163,38 @@ class TasksEndpoint(BaseEndpoint):
 
             # Handle task assignment notification
             if task.assigned_to_id and task.assigned_to_id != current_task.assigned_to_id:
-                assigned_user = Users.get_user_by_id(task.assigned_to_id)
-                project = Projects.get_project(current_task.project_id)
-                task_url = f"{SERVER_URL}/projects/{current_task.project_id}/tasks/{task_id}"
-                EmailService.notify_task_assignment(
-                    assigned_user.username,
-                    updated.name,
-                    project.name,
-                    task_url
-                )
+                try:
+                    assigned_user = Users.get_user_by_id(task.assigned_to_id)
+                    project = Projects.get_project(current_task.project_id)
+                    if assigned_user and project:
+                        task_url = f"{SERVER_URL}/projects/{current_task.project_id}/tasks/{task_id}"
+                        EmailService.notify_task_assignment(
+                            assigned_user.username,
+                            updated.name,
+                            project.name,
+                            task_url
+                        )
+                except Exception as e:
+                    print(f"Error sending task assignment notification: {e}")
 
             # Handle task completion notification
             if task.status == "completed" and current_task.status != "completed":
-                project = Projects.get_project(current_task.project_id)
-                project_members = Projects.get_project_members(current_task.project_id)
-                member_ids = [member.user_id for member in project_members]
-                member_users = [Users.get_user_by_id(member_id) for member_id in member_ids]
-                member_emails = [user.username for user in member_users]
-                # Notify about task completion
-                EmailService.notify_task_completed(
-                    member_emails,
-                    updated.name,
-                    project.name,
-                    userinfo.name or userinfo.username
-                )
+                try:
+                    project = Projects.get_project(current_task.project_id)
+                    if project:
+                        project_members = Projects.get_project_members(current_task.project_id)
+                        member_ids = [member.user_id for member in project_members]
+                        member_users = [Users.get_user_by_id(mid) for mid in member_ids]
+                        member_emails = [u.username for u in member_users if u is not None]
+                        if member_emails:
+                            EmailService.notify_task_completed(
+                                member_emails,
+                                updated.name,
+                                project.name,
+                                userinfo.name or userinfo.username
+                            )
+                except Exception as e:
+                    print(f"Error sending task completed notification: {e}")
 
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))

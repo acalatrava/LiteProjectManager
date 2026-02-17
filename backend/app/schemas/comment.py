@@ -1,9 +1,9 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, constr
 from datetime import datetime
 
 
 class CommentBase(BaseModel):
-    content: str
+    content: constr(min_length=1, max_length=5000)
 
 
 class CommentCreate(CommentBase):

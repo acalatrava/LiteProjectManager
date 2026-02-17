@@ -99,6 +99,11 @@ class ProjectsEndpoint(BaseEndpoint):
         if not Projects.is_project_manager(userinfo.id, project_id) and userinfo.role != UserRole.ADMIN:
             raise HTTPException(status_code=403, detail="Only project managers can add members")
 
+        # Verify the user being added actually exists
+        user = Users.get_user_by_id(member.user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
         # Check if the user is already a member of the project
         if Projects.is_project_member(member.user_id, project_id):
             raise HTTPException(status_code=400, detail="User already a member of this project")
@@ -107,14 +112,16 @@ class ProjectsEndpoint(BaseEndpoint):
 
         # Send email notification to the new member
         project = Projects.get_project(project_id)
-        user = Users.get_user_by_id(member.user_id)
-        project_url = f"{SERVER_URL}/projects/{project_id}"
-
-        EmailService.notify_project_assignment(
-            user.username,
-            project.name,
-            project_url
-        )
+        if project and user:
+            project_url = f"{SERVER_URL}/projects/{project_id}"
+            try:
+                EmailService.notify_project_assignment(
+                    user.username,
+                    project.name,
+                    project_url
+                )
+            except Exception as e:
+                print(f"Error sending project assignment email: {e}")
 
         return added_member
 
@@ -126,12 +133,19 @@ class ProjectsEndpoint(BaseEndpoint):
     ) -> DefaultResponse:
         if not Projects.is_project_manager(userinfo.id, project_id) and userinfo.role != UserRole.ADMIN:
             raise HTTPException(status_code=403, detail="Only project managers can remove members")
-        # Check if there is at least one project manager left
-        if Projects.get_project_members(project_id):
-            project_managers = [member for member in Projects.get_project_members(
-                project_id) if member.role == "project_manager"]
-            if len(project_managers) == 1:
+
+        # Verify the member exists in the project
+        members = Projects.get_project_members(project_id)
+        target_member = next((m for m in members if m.user_id == user_id), None)
+        if not target_member:
+            raise HTTPException(status_code=404, detail="Member not found")
+
+        # Only block removal if the target is a PM and they're the last one
+        if target_member.role == "project_manager":
+            pm_count = sum(1 for m in members if m.role == "project_manager")
+            if pm_count <= 1:
                 raise HTTPException(status_code=400, detail="Cannot remove the last project manager")
+
         if Projects.remove_project_member(project_id, user_id):
             return DefaultResponse(code=200, result="Member removed successfully")
-        raise HTTPException(status_code=404, detail="Member not found")
+        raise HTTPException(status_code=500, detail="Error removing member")

@@ -1,11 +1,11 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, constr
 from datetime import datetime
 from typing import Optional, List
 
 
 class TaskBase(BaseModel):
-    name: str
-    description: str
+    name: constr(min_length=1, max_length=200)
+    description: constr(max_length=5000)
     project_id: str
     start_date: datetime
     deadline: datetime
@@ -17,8 +17,8 @@ class TaskCreate(TaskBase):
 
 
 class TaskUpdate(BaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
+    name: Optional[constr(min_length=1, max_length=200)] = None
+    description: Optional[constr(max_length=5000)] = None
     project_id: Optional[str] = None
     start_date: Optional[datetime] = None
     deadline: Optional[datetime] = None

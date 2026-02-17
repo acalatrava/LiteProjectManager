@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-import hashlib
+import bcrypt
 import re
 import uuid
 from typing import List, Optional
@@ -44,29 +44,26 @@ class UsersTable:
             return None
 
         try:
-            # Generate a random salt
-            salt = str(uuid.uuid4())
-
-            # Encrypt the password using sha256 and the salt
-            password = hashlib.sha256((salt + password).encode()).hexdigest()
+            # Hash password with bcrypt (salt is embedded in the hash)
+            hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
             # Generate an id from the username
             id = str(uuid.uuid5(namespace=uuid.NAMESPACE_OID, name=username.lower()))
 
-            # Generate a token based on id and random string
-            token = hashlib.sha256((id + str(uuid.uuid4())).encode()).hexdigest()
-
             # Check if this is the first user
             is_first_user = self.get_num_users() == 0
 
-            # Create new user with admin role if it's the first user
+            # First user gets admin role, otherwise use the provided role
+            effective_role = UserRole.ADMIN.value if is_first_user else role
+
+            # Create new user
             user = User.create(
                 id=id,
-                token=token,
+                token='',
                 username=username.lower(),
-                password=password,
-                salt=salt,
-                role=UserRole.ADMIN.value if is_first_user else UserRole.USER.value,
+                password=hashed_password,
+                salt='',
+                role=effective_role,
                 name=name,
                 created_at=datetime.now(),
                 updated_at=datetime.now()
@@ -100,6 +97,9 @@ class UsersTable:
                 return None
 
             user = User.get(User.id == auth_token.user_id)
+            # Block inactive users
+            if not user.is_active:
+                return None
             return UserInDB(**user.to_dict())
         except Exception as e:
             print(f"Error getting user by token: {e}")
@@ -135,9 +135,12 @@ class UsersTable:
         try:
             # Get user and verify password
             user = User.get(User.username == username.lower())
-            hashed_password = hashlib.sha256((user.salt + password).encode()).hexdigest()
 
-            if user.password != hashed_password:
+            # Block inactive users from logging in
+            if not user.is_active:
+                return None
+
+            if not bcrypt.checkpw(password.encode(), user.password.encode()):
                 return None
 
             # Create new auth token
@@ -171,11 +174,13 @@ class UsersTable:
 
     def update_user_by_id(self, id: str, updated: dict) -> Optional[UserInDB]:
         try:
-            # If changing password, generate new salt and hash
+            # If changing password, hash with bcrypt and invalidate tokens
             if 'password' in updated:
-                salt = str(uuid.uuid4())
-                updated['password'] = hashlib.sha256((salt + updated['password']).encode()).hexdigest()
-                updated['salt'] = salt
+                updated['password'] = bcrypt.hashpw(updated['password'].encode(), bcrypt.gensalt()).decode()
+                # Remove legacy salt field if present
+                updated.pop('salt', None)
+                # Invalidate all existing auth tokens for this user
+                AuthToken.update(is_active=False).where(AuthToken.user_id == id).execute()
 
             # Update user
             query = User.update(**updated).where(User.id == id)
@@ -229,16 +234,15 @@ class UsersTable:
     def verify_password(self, username: str, password: str) -> bool:
         try:
             user = User.get(User.username == username.lower())
-            # Encrypt the password using sha256 and the user's salt
-            hashed_password = hashlib.sha256((user.salt + password).encode()).hexdigest()
-            return user.password == hashed_password
+            return bcrypt.checkpw(password.encode(), user.password.encode())
         except User.DoesNotExist:
             return False
 
     def create_auth_token(self, user_id: str) -> Optional[str]:
         try:
-            # Generate new token
-            token = hashlib.sha256((str(uuid.uuid4()) + str(datetime.now())).encode()).hexdigest()
+            import secrets
+            # Generate cryptographically secure token
+            token = secrets.token_hex(32)
 
             # Calculate expiration
             expires_at = datetime.now() + timedelta(seconds=int(AUTH_TOKEN_LIFETIME))
@@ -341,14 +345,18 @@ class ProjectsTable:
 
     def delete_project(self, project_id: str) -> bool:
         try:
-            # Delete associated tasks first
+            # Delete associated comments first
+            for task in TaskModel.select().where(TaskModel.project_id == project_id):
+                CommentModel.delete().where(CommentModel.task_id == task.id).execute()
+            # Delete associated tasks
             TaskModel.delete().where(TaskModel.project_id == project_id).execute()
             # Delete project members
             ProjectMemberModel.delete().where(ProjectMemberModel.project_id == project_id).execute()
             # Delete project
             ProjectModel.delete().where(ProjectModel.id == project_id).execute()
             return True
-        except:
+        except Exception as e:
+            print(f"Error deleting project: {e}")
             return False
 
     def get_all_projects(self) -> List[ProjectSchema]:
@@ -416,6 +424,9 @@ class ProjectsTable:
 
     def get_user_project(self, user_id: str, project_id: str) -> Optional[ProjectSchema]:
         try:
+            # Verify user has access to this project
+            if not self.user_has_access(user_id, project_id):
+                return None
             project = ProjectModel.get(ProjectModel.id == project_id)
             return ProjectSchema.model_validate(project.to_dict())
         except ProjectModel.DoesNotExist:
@@ -471,12 +482,13 @@ class ProjectsTable:
 
     def remove_project_member(self, project_id: str, user_id: str) -> bool:
         try:
-            ProjectMemberModel.delete().where(
+            deleted = ProjectMemberModel.delete().where(
                 (ProjectMemberModel.project_id == project_id) &
                 (ProjectMemberModel.user_id == user_id)
             ).execute()
-            return True
-        except:
+            return deleted > 0
+        except Exception as e:
+            print(f"Error removing project member: {e}")
             return False
 
     def is_project_member(self, user_id: str, project_id: str) -> bool:
@@ -484,6 +496,24 @@ class ProjectsTable:
             (ProjectMemberModel.user_id == user_id) &
             (ProjectMemberModel.project_id == project_id)
         ).exists()
+
+    def get_users_in_shared_projects(self, user_id: str) -> List[UserInDB]:
+        """Get all users who share at least one project with the given user."""
+        # Get all project IDs the user is a member of
+        user_project_ids = (
+            ProjectMemberModel
+            .select(ProjectMemberModel.project_id)
+            .where(ProjectMemberModel.user_id == user_id)
+        )
+        # Get all user IDs in those projects
+        shared_user_ids = (
+            ProjectMemberModel
+            .select(ProjectMemberModel.user_id)
+            .where(ProjectMemberModel.project_id.in_(user_project_ids))
+            .distinct()
+        )
+        users = User.select().where(User.id.in_(shared_user_ids))
+        return [UserInDB.model_validate(u) for u in users]
 
 
 class TasksTable:
@@ -725,11 +755,19 @@ class CommentsTable:
             for comment in CommentModel.select().where(CommentModel.task_id == task_id)
         ]
 
+    def get_comment(self, comment_id: str) -> Optional[CommentSchema]:
+        try:
+            comment = CommentModel.get(CommentModel.id == comment_id)
+            return CommentSchema.model_validate(comment.to_dict())
+        except CommentModel.DoesNotExist:
+            return None
+
     def delete_comment(self, comment_id: str) -> bool:
         try:
-            CommentModel.delete().where(CommentModel.id == comment_id).execute()
-            return True
-        except:
+            deleted = CommentModel.delete().where(CommentModel.id == comment_id).execute()
+            return deleted > 0
+        except Exception as e:
+            print(f"Error deleting comment: {e}")
             return False
 
 

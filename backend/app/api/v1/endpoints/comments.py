@@ -26,7 +26,7 @@ class CommentsEndpoint(BaseEndpoint):
         if not task:
             raise HTTPException(status_code=404, detail="Task not found")
 
-        if not Projects.user_has_access(userinfo.id, task.project_id):
+        if not (userinfo.is_admin or Projects.user_has_access(userinfo.id, task.project_id)):
             raise HTTPException(status_code=403, detail="No access to this task")
 
         return Comments.get_task_comments(task_id)
@@ -41,7 +41,7 @@ class CommentsEndpoint(BaseEndpoint):
         if not task:
             raise HTTPException(status_code=404, detail="Task not found")
 
-        if not Projects.user_has_access(userinfo.id, task.project_id):
+        if not (userinfo.is_admin or Projects.user_has_access(userinfo.id, task.project_id)):
             raise HTTPException(status_code=403, detail="No access to this task")
 
         return Comments.create_comment(comment, userinfo.id)
@@ -51,6 +51,15 @@ class CommentsEndpoint(BaseEndpoint):
         comment_id: str = Path(...),
         userinfo=Depends(user_check)
     ) -> DefaultResponse:
+        # Fetch the comment to verify ownership
+        comment = Comments.get_comment(comment_id)
+        if not comment:
+            raise HTTPException(status_code=404, detail="Comment not found")
+
+        # Only comment owner or admin can delete
+        if comment.user_id != userinfo.id and not userinfo.is_admin:
+            raise HTTPException(status_code=403, detail="Not authorized to delete this comment")
+
         if Comments.delete_comment(comment_id):
             return DefaultResponse(code=200, result="Comment deleted successfully")
-        raise HTTPException(status_code=404, detail="Comment not found")
+        raise HTTPException(status_code=500, detail="Error deleting comment")

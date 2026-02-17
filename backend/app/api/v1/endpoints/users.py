@@ -3,9 +3,9 @@ from typing import List, Optional
 from app.core.endpoints.endpoint import BaseEndpoint
 from app.schemas.base import DefaultResponse
 from app.schemas.users import UserInDB, UserUpdate, UserRole, UserCreate
-from app.db.relational import Users
+from app.db.relational import Users, Projects
 from app.services.authentication import admin_user_check, user_check
-import random
+import secrets
 import string
 from app.services.email_service import EmailService
 
@@ -69,13 +69,14 @@ class UsersEndpoint(BaseEndpoint):
         limit: int = Query(50, ge=1, le=100)
     ) -> List[UserInDB]:
         """
-        Get list of all users with pagination
+        Get list of all users with pagination.
+        Admins see all users; regular users only see users in shared projects.
         """
         if userinfo.is_admin:
             return Users.get_all_users(skip=skip, limit=limit)
         else:
-            # TODO: Return only the users where the user is member of projects
-            return Users.get_all_users(skip=skip, limit=limit)
+            # Only return users who share at least one project with this user
+            return Projects.get_users_in_shared_projects(userinfo.id)
 
     async def get_user(
         self,
@@ -164,10 +165,10 @@ class UsersEndpoint(BaseEndpoint):
                 detail="Error deleting user"
             )
 
-    def generate_random_password(self, length=8):
-        """Generate a random password with letters and numbers"""
-        characters = string.ascii_letters + string.digits
-        return ''.join(random.choice(characters) for _ in range(length))
+    def generate_random_password(self, length=12):
+        """Generate a cryptographically secure random password"""
+        alphabet = string.ascii_letters + string.digits + "!@#$%&*"
+        return ''.join(secrets.choice(alphabet) for _ in range(length))
 
     async def create_user(
         self,

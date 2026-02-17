@@ -1,13 +1,9 @@
-from fastapi import Path, Query, Body, HTTPException, status
-from typing import List, Optional
+from fastapi import Body, HTTPException, status
 from app.core.endpoints.endpoint import BaseEndpoint
 from app.schemas.users import UserInDB, UserUpdate
-from app.schemas.base import DefaultResponse
 from app.db.relational import Users
 from app.services.authentication import user_check
 from fastapi import Depends
-
-import json
 
 
 class UserInfoEndpoint(BaseEndpoint):
@@ -29,8 +25,16 @@ class UserInfoEndpoint(BaseEndpoint):
         userinfo=Depends(user_check)
     ) -> UserInDB:
         """Update the authenticated user's information"""
-        # Prevent user from deactivating their own account or changing their username
         update_data = user_update.model_dump(exclude_unset=True)
+
+        # Prevent privilege escalation — users cannot change their own role
+        if 'role' in update_data:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot change own role"
+            )
+
+        # Prevent user from deactivating their own account
         if 'is_active' in update_data:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

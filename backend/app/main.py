@@ -34,15 +34,15 @@ class SPAStaticFiles(StaticFiles):
 # Initialize FastAPI app
 app = FastAPI(title=config.PROJECT_NAME, version=config.PROJECT_VERSION)
 
-# CORS
-origins = ["*"]
+# CORS — restrict to configured frontend origin
+origins = [config.SERVER_URL] if config.SERVER_URL else ["http://localhost:3000"]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 # Add database dependency
