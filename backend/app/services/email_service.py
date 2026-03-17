@@ -96,6 +96,7 @@ class EmailService:
     def send_new_user_credentials(username: str, password: str) -> bool:
         """Send welcome email to new user with their credentials"""
         safe_username = escape(username)
+        safe_password = escape(password)
         safe_url = escape(config.SERVER_URL)
         subject = "Bienvenido al Gestor de Proyectos - Detalles de tu Cuenta"
         html_content = f"""
@@ -104,7 +105,7 @@ class EmailService:
         <p>Tus credenciales de acceso son:</p>
         <ul>
             <li><strong>Usuario:</strong> {safe_username}</li>
-            <li><strong>Contraseña:</strong> (enviada de forma segura)</li>
+            <li><strong>Contraseña:</strong> {safe_password}</li>
         </ul>
         <p>Conéctate a la VPN y accede al sistema haciendo clic <a href="{safe_url}/login">aquí</a>.</p>
         <p>Por favor, cambia tu contraseña después de tu primer inicio de sesión.</p>
